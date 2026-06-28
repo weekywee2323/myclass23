@@ -3,26 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>古典成語填字挑戰 - 國中國文互動教材</title>
-    <meta name="description" content="精緻故宮風國中國文成語填字練習。支援電腦滑鼠與平板觸控，內建編鐘與硃砂蓋印音畫體驗。">
-    
-    <!-- Google Fonts: 載入宋體/襯線字 -->
+    <title>世界公民 - 國家名稱填字挑戰</title>
+    <meta name="description" content="動漫環遊世界風格的國家中英文填字遊戲。拖曳字母或漢字填補空缺，解鎖世界公民印章。">
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-imperial-red: #7a1f1d; /* 宮廷紅 */
-            --bg-parchment: #f9f5eb; /* 仿古宣紙米色 */
-            --border-gold: #d4af37; /* 古典金色 */
-            --wood-card: #fdfaf2; /* 木紋/象牙白字卡 */
-            --seal-red: #b91c1c; /* 硃砂印泥紅 */
-            --jade-green: #14532d; /* 碧玉綠 */
-            --text-dark: #2c2421;
-            --text-light: #f5ece1;
-            --font-classical: 'Noto Serif TC', serif;
-            --shadow-classic: 0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.15);
+            --bg-cream: #faf6eb; /* 溫馨米色 */
+            --anime-blue: #3b82f6; /* 動漫明亮藍 */
+            --earth-green: #2e7d32; /* 大地綠 */
+            --wood-light: #f3edd9; /* 木頭底色 */
+            --border-dark: #2c2518; /* 深色描邊 */
+            --neon-yellow: #ffea00; /* 正確字體黃色 */
+            --shadow-flat: 4px 4px 0px var(--border-dark);
+            --font-zh: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            --font-en: 'Outfit', sans-serif;
         }
 
         * {
@@ -32,280 +30,277 @@
         }
 
         body {
-            font-family: var(--font-classical);
-            background-color: var(--bg-imperial-red);
+            font-family: var(--font-zh);
+            background-color: var(--bg-cream);
             background-image: 
-                radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.08) 0%, transparent 70%),
-                repeating-linear-gradient(0deg, rgba(212, 175, 55, 0.02) 0px, rgba(212, 175, 55, 0.02) 1px, transparent 1px, transparent 4px);
+                /* 世界地圖輕微浮水印 */
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 1000 500' opacity='0.08'%3E%3Cpath fill='%232c2518' d='M150 150h50v50h-50zm200 50h100v50H350zm300-100h50v80h-50zm-150 200h120v40H500zm-350 80h80v30h-80zm500 20h100v40H650z'/%3E%3Ccircle cx='200' cy='280' r='10' fill='%232c2518'/%3E%3Ccircle cx='800' cy='180' r='15' fill='%232c2518'/%3E%3Ccircle cx='500' cy='120' r='8' fill='%232c2518'/%3E%3C/svg%3E"),
+                radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 80%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 1.5rem;
-            color: var(--text-light);
-            overflow: hidden;
+            color: var(--border-dark);
+            overflow-x: hidden;
         }
 
-        /* 遊戲主要框架 - 故宮卷軸風格 */
-        .scroll-container {
-            background: var(--bg-parchment);
-            border: 8px double var(--border-gold);
+        /* 遊戲主要面板 */
+        .game-cabinet {
+            background: #ffffff;
+            border: 4px solid var(--border-dark);
             border-radius: 24px;
             width: 100%;
             max-width: 500px;
-            color: var(--text-dark);
             padding: 1.8rem;
-            box-shadow: var(--shadow-classic);
+            box-shadow: var(--shadow-flat);
             position: relative;
-            transform: rotate(0.3deg);
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
 
-        /* 左右裝飾捲軸線 */
-        .scroll-container::before, .scroll-container::after {
-            content: '';
-            position: absolute;
-            top: 5%;
-            width: 12px;
-            height: 90%;
-            background: var(--border-gold);
-            border-radius: 99px;
-            box-shadow: 2px 4px 8px rgba(0,0,0,0.3);
-        }
-        .scroll-container::before { left: -14px; }
-        .scroll-container::after { right: -14px; }
-
-        /* 標題區 */
+        /* 頂部導航與進度 */
         .game-header {
-            text-align: center;
-            border-bottom: 2px solid var(--seal-red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--border-dark);
             padding-bottom: 0.8rem;
-            position: relative;
+            margin-top: 1.2rem; /* 給回到地圖按鈕預留空間 */
         }
 
         .game-header h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 900;
-            color: var(--seal-red);
-            letter-spacing: 3px;
-            margin-bottom: 0.2rem;
-        }
-
-        .progress-indicator {
-            font-size: 0.85rem;
-            color: #6b5a50;
+            color: var(--anime-blue);
             letter-spacing: 1px;
-            font-weight: 700;
         }
 
-        /* 成語大字展示區 */
-        .idiom-display-area {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            padding: 1rem 0;
-            background: rgba(122, 31, 29, 0.03);
-            border: 1px dashed rgba(122, 31, 29, 0.2);
-            border-radius: 16px;
+        .progress-text {
+            font-family: var(--font-en);
+            background: var(--border-dark);
+            color: #ffffff;
+            padding: 0.3rem 0.8rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 800;
         }
 
-        /* 成語正常字 */
-        .char-box {
-            font-size: 3.2rem;
-            font-weight: 900;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            color: var(--text-dark);
-        }
-
-        /* Calligraphy Tracing Grid - 米字格紅色空盒 */
-        .blank-box {
-            width: 80px;
-            height: 80px;
-            border: 3px solid var(--seal-red);
-            background-color: #fff9ed;
+        /* 回到大地圖按鈕 */
+        .back-btn {
+            position: absolute;
+            left: 1.8rem;
+            top: 1rem;
+            background: #ffffff;
+            border: 2px solid var(--border-dark);
+            color: var(--border-dark);
+            padding: 4px 10px;
             border-radius: 8px;
-            position: relative;
+            font-size: 0.75rem;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 2px 2px 0px var(--border-dark);
+            transition: all 0.15s ease;
+            z-index: 10;
+        }
+
+        .back-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px var(--border-dark);
+            background: var(--bg-cream);
+        }
+
+        .back-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--border-dark);
+        }
+
+        /* 國家名稱顯示框 */
+        .country-display-area {
+            background: var(--bg-cream);
+            border: 3px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1.5rem 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 100px;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.06);
+        }
+
+        /* 國家文字或空格 */
+        .char-item {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--border-dark);
+            width: 42px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 2px 6px rgba(185, 28, 28, 0.15);
+            text-transform: uppercase;
+        }
+
+        /* 藍色方框空格 */
+        .char-slot {
+            width: 40px;
+            height: 48px;
+            border: 3px dashed var(--anime-blue);
+            border-radius: 10px;
+            background: rgba(59, 130, 246, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--neon-yellow); /* 答對後的黃色 */
             transition: all 0.2s ease;
         }
 
-        /* 米字格對角輔助線 (CSS繪製) */
-        .blank-box::before {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background-image: 
-                linear-gradient(to right, rgba(185, 28, 28, 0.08) 50%, transparent 50%),
-                linear-gradient(to bottom, rgba(185, 28, 28, 0.08) 50%, transparent 50%),
-                linear-gradient(45deg, transparent 48%, rgba(185, 28, 28, 0.08) 50%, transparent 52%),
-                linear-gradient(-45deg, transparent 48%, rgba(185, 28, 28, 0.08) 50%, transparent 52%);
-            background-size: 100% 100%;
-            pointer-events: none;
+        /* 答對時空格的樣式 */
+        .char-slot.snapped-correct {
+            border: 3px solid var(--earth-green);
+            background: var(--earth-green);
+            color: var(--neon-yellow);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            animation: popCorrect 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .blank-box.drag-hover {
-            background-color: #fde8e8;
-            border-width: 4px;
+        @keyframes popCorrect {
+            0% { transform: scale(0.8); }
+            100% { transform: scale(1); }
         }
 
-        /* 答對時在空格內顯示的紅字（硃砂紅印效果） */
-        .blank-box.solved-stamp {
-            border-color: var(--seal-red);
-            animation: stampGlow 0.4s ease-out forwards;
-        }
-
-        .blank-box.solved-stamp .stamp-char {
-            font-size: 3.2rem;
-            font-weight: 900;
-            color: var(--seal-red);
-            text-shadow: 0 0 1px rgba(185, 28, 28, 0.4);
-            transform: scale(1.1) rotate(-3deg);
-        }
-
-        @keyframes stampGlow {
-            0% { transform: scale(1.4); opacity: 0; }
-            80% { transform: scale(0.95); }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* 錯誤閃紅 */
-        .blank-box.error-flash {
-            animation: flashRed 0.25s ease-out 2;
-        }
-
-        @keyframes flashRed {
-            0%, 100% { border-color: var(--seal-red); background-color: #fff9ed; }
-            50% { border-color: #ef4444; background-color: #fee2e2; }
-        }
-
-        /* 下方成語釋義與下一題按鈕 (填字成功後顯示) */
-        .feedback-area {
-            background: #f0e6d2;
-            border: 2px solid var(--border-gold);
-            border-radius: 14px;
-            padding: 0.8rem 1.2rem;
+        /* 答對回饋面板 */
+        .feedback-panel {
+            background: rgba(46, 125, 50, 0.08);
+            border: 2px solid var(--earth-green);
+            border-radius: 16px;
+            padding: 1rem;
             text-align: center;
             display: none;
             flex-direction: column;
-            gap: 0.8rem;
-            animation: fadeIn 0.4s ease;
+            gap: 8px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .feedback-title {
-            color: var(--jade-green);
             font-weight: 900;
-            font-size: 1.15rem;
-            letter-spacing: 1px;
+            color: var(--earth-green);
+            font-size: 1.1rem;
         }
 
-        .feedback-meaning {
-            font-size: 0.95rem;
-            color: #4a3c31;
-            line-height: 1.5;
+        .feedback-hint {
+            font-size: 0.85rem;
+            color: #475569;
+            line-height: 1.4;
         }
 
-        /* 字卡池 */
+        .next-btn {
+            font-family: var(--font-zh);
+            background: var(--anime-blue);
+            color: #ffffff;
+            border: 3px solid var(--border-dark);
+            border-radius: 12px;
+            padding: 0.6rem 2rem;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: var(--shadow-flat);
+            align-self: center;
+            transition: all 0.15s ease;
+        }
+
+        .next-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--border-dark);
+        }
+
+        .next-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px var(--border-dark);
+        }
+
+        /* 字卡池區 */
         .cards-pool {
+            background: #ffffff;
+            border: 3px solid var(--border-dark);
+            border-radius: 16px;
+            padding: 1rem;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 12px;
-            padding: 0.5rem 0;
-            min-height: 110px;
+            gap: 10px;
+            min-height: 120px;
         }
 
-        /* 拖曳字卡 */
+        /* 大地綠、淺色木紋、黑色楷體字卡 */
         .word-card {
-            background-color: var(--wood-card);
-            border: 2.5px solid var(--text-dark);
-            width: 52px;
-            height: 52px;
+            background: linear-gradient(to bottom, var(--wood-light) 0%, #e2d8b8 100%);
+            border: 3px solid var(--earth-green);
+            width: 48px;
+            height: 48px;
             border-radius: 8px;
-            font-size: 1.7rem;
+            font-family: "Kaiti TC", "KaiTi", "標楷體", serif;
+            font-size: 1.6rem;
             font-weight: 900;
-            color: var(--text-dark);
+            color: #1a1a1a; /* 黑色字體 */
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: grab;
-            box-shadow: 0 4px 0 var(--text-dark);
+            box-shadow: 0 4px 0 var(--earth-green);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             position: relative;
             z-index: 10;
-            touch-action: none; /* 僅在字卡上禁用預設觸控手勢，防止拖曳時視窗捲動，並允許其他元素點擊 */
+            touch-action: none; /* 僅在字卡上禁用預設觸控，允許其他元素點擊 */
+            text-transform: uppercase;
         }
 
         .word-card:active {
             cursor: grabbing;
         }
 
-        /* 當字卡被拖曳時的暫時樣式（由 JS 動態克隆或設定） */
         .word-card.dragging-active {
-            opacity: 0.85;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-            transform: scale(1.15);
-            border-color: var(--seal-red);
-            background: #ffffff;
+            opacity: 0.9;
+            transform: scale(1.1);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--anime-blue);
         }
 
-        /* 答對消失 */
         .word-card.hidden-card {
             visibility: hidden;
             pointer-events: none;
         }
 
-        /* 按鈕風格 */
-        .next-btn {
-            font-family: var(--font-classical);
-            background: var(--seal-red);
-            color: var(--text-light);
-            border: 1px solid var(--border-gold);
-            padding: 0.5rem 1.8rem;
-            border-radius: 99px;
-            font-size: 1.05rem;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #5c0f0f;
-            transition: all 0.1s ease;
-            align-self: center;
-            letter-spacing: 1px;
+        /* 答錯紅閃框 */
+        .country-display-area.error-flash {
+            animation: flashRed 0.25s ease-out;
         }
 
-        .next-btn:hover {
-            background: #a21a1a;
-            transform: translateY(-1px);
-            box-shadow: 0 5px 0 #5c0f0f;
+        @keyframes flashRed {
+            0%, 100% { border-color: var(--border-dark); }
+            50% { border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
         }
 
-        .next-btn:active {
-            transform: translateY(3px);
-            box-shadow: 0 1px 0 #5c0f0f;
-        }
-
-        /* 結算報告覆蓋層 */
+        /* 結束覆蓋結果畫面 */
         .result-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--bg-parchment);
-            border-radius: 16px;
+            background: var(--bg-cream);
+            border-radius: 20px;
             z-index: 100;
             display: none;
             flex-direction: column;
@@ -320,32 +315,34 @@
         .result-title {
             font-size: 2.2rem;
             font-weight: 900;
-            color: var(--seal-red);
-            letter-spacing: 4px;
+            color: var(--anime-blue);
+            text-shadow: 2px 2px 0px var(--border-dark);
+            letter-spacing: 2px;
         }
 
         .score-info {
-            background: white;
-            border: 2px solid var(--border-gold);
-            border-radius: 16px;
-            padding: 1.2rem 2.5rem;
-            box-shadow: 0 6px 0 var(--text-dark);
+            background: #ffffff;
+            border: 3px solid var(--border-dark);
+            border-radius: 20px;
+            padding: 1.5rem;
+            width: 90%;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.6rem;
+            box-shadow: var(--shadow-flat);
         }
 
         .score-val {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.8rem;
+            font-family: var(--font-en);
+            font-size: 3rem;
             font-weight: 900;
-            color: var(--seal-red);
+            color: var(--earth-green);
         }
 
         .comment-text {
-            font-size: 1rem;
-            color: #5c4033;
+            font-size: 0.95rem;
             font-weight: 700;
+            color: var(--border-dark);
         }
 
         @keyframes fadeIn {
@@ -356,63 +353,80 @@
 </head>
 <body>
 
-    <div class="scroll-container">
-        <!-- 回到大地圖按鈕 -->
-        <a href="../index.html" style="position: absolute; left: 15px; top: 15px; background: var(--seal-red); color: var(--text-light); border: 1px solid var(--border-gold); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: all 0.2s; z-index: 99; display: inline-block;">← 回到大地圖</a>
+    <!-- 回到大地圖 -->
+    <a href="../index.html" class="back-btn">← 回到大地圖</a>
+
+    <div class="game-cabinet">
         <!-- 頂部資訊 -->
         <div class="game-header">
-            <h1 id="titleText">古典成語填字</h1>
-            <div class="progress-indicator" id="progressText">第 1/5 題</div>
+            <h1 id="titleText">世界公民挑戰</h1>
+            <div class="progress-text" id="progressText">ROUND 1/5</div>
         </div>
 
-        <!-- 3.2 大字成語框區 -->
-        <div class="idiom-display-area" id="idiomDisplay">
-            <!-- 由 JS 生成，例：一 (□) 千 (□) -->
+        <!-- 中文或英文國家名稱大字框 (含空格) -->
+        <div class="country-display-area" id="countryDisplay">
+            <!-- 由 JS 生成，例：M □ □ □ □ □ □ a -->
         </div>
 
-        <!-- 正確回饋與意思說明 -->
-        <div class="feedback-area" id="feedbackArea">
-            <div class="feedback-title">✓ 答對了！</div>
-            <div class="feedback-meaning" id="feedbackMeaning">成語說明載入中...</div>
-            <button class="next-btn" id="nextQuestionBtn">下一題</button>
+        <!-- 答對說明面板 -->
+        <div class="feedback-panel" id="feedbackPanel">
+            <div class="feedback-title" id="feedbackTitle">✓ 答對了！</div>
+            <div class="feedback-hint" id="feedbackHint">國家說明載入中...</div>
+            <button class="next-btn" id="nextQuestionBtn" style="margin-top:0.5rem;">下一題</button>
         </div>
 
-        <!-- 下方候選字池 -->
+        <!-- 大地綠木紋字卡池 -->
         <div class="cards-pool" id="cardsPool">
-            <!-- 2個正解 + 8個干擾字 -->
+            <!-- 15個隨機卡片 -->
         </div>
 
-        <!-- 結算成績頁面 (直接覆蓋容器內部) -->
+        <!-- 結算報告 -->
         <div class="result-overlay" id="resultOverlay">
-            <h2 class="result-title">挑戰結束</h2>
+            <h2 class="result-title">🏆 冒險完成</h2>
             <div class="score-info">
-                <span style="font-size: 0.85rem; color: #78716c; font-weight: 900;">總成績得分</span>
                 <span class="score-val" id="finalScore">100</span>
-                <span class="comment-text" id="finalComment">成語小達人！</span>
+                <span class="comment-text" id="finalComment">世界公民！</span>
             </div>
             <button class="next-btn" id="restartBtn" style="padding: 0.8rem 2.2rem; font-size: 1.15rem;">重新挑戰</button>
         </div>
     </div>
 
     <script>
-        // 題庫資料 (共12題)
+        // 題庫資料 (中英混合各半)
         const QUESTIONS = [
-            { 成語: '一鳴驚人', 缺字: [1, 2], 答案: ['鳴', '驚'], 意思: '比喻平時默默無聞，突然有驚人表現。' },
-            { 成語: '風花雪月', 缺字: [1, 3], 答案: ['花', '月'], 意思: '原指四時景色，後比喻浮華空洞的詩文。' },
-            { 成語: '三番五次', 缺字: [1, 3], 答案: ['番', '次'], 意思: '形容次數很多。' },
-            { 成語: '一字千金', 缺字: [1, 3], 答案: ['字', '金'], 意思: '形容文字價值極高。' },
-            { 成語: '畫龍點睛', 缺字: [1, 3], 答案: ['龍', '睛'], 意思: '比喻在關鍵處點明要旨。' },
-            { id: 6, 成語: '守株待兔', 缺字: [1, 3], 答案: ['株', '兔'], 意思: '比喻死守狹隘經驗，不知變通。' },
-            { id: 7, 成語: '亡羊補牢', 缺字: [1, 3], 答案: ['羊', '牢'], 意思: '比喻出事後及時想辦法補救，免得以後再受損失。' },
-            { id: 8, 成語: '井底之蛙', 缺字: [1, 3], 答案: ['底', '蛙'], 意思: '比喻見識狹隘、眼界狹小的人。' },
-            { id: 9, 成語: '狐假虎威', 缺字: [1, 3], 答案: ['假', '威'], 意思: '比喻憑恃有權勢者的威風恐嚇、欺壓他人。' },
-            { id: 10, 成語: '盲人摸象', 缺字: [1, 3], 答案: ['人', '象'], 意思: '比喻僅憑片面的了解，便對事物下結論。' },
-            { id: 11, 成語: '對牛彈琴', 缺字: [1, 3], 答案: ['牛', '琴'], 意思: '比喻對不懂道理的人講道理，含有白費力氣之意。' },
-            { id: 12, 成語: '拋磚引玉', 缺字: [1, 3], 答案: ['磚', '玉'], 意思: '比喻自己先發表粗淺意見，以引出別人高明的見解。' }
+            // 英文國家 (留頭尾)
+            { type: 'en', title: '英文國家名稱', name: 'Malaysia', blanks: [1, 2, 3, 4, 5, 6], correct: ['a', 'l', 'a', 'y', 's', 'i'], hint: '馬來西亞：位於東南亞，以雙子星塔與豐富生態聞名。' },
+            { type: 'en', title: '英文國家名稱', name: 'Austria', blanks: [1, 2, 3, 4, 5], correct: ['u', 's', 't', 'r', 'i'], hint: '奧地利：位於中歐的內陸山國，音樂之都維也納的所在地。' },
+            { type: 'en', title: '英文國家名稱', name: 'Germany', blanks: [1, 2, 3, 4, 5], correct: ['e', 'r', 'm', 'a', 'n'], hint: '德國：歐洲經濟大國，以工藝技術、黑森林與新天鵝堡聞名。' },
+            { type: 'en', title: '英文國家名稱', name: 'Iceland', blanks: [1, 2, 3, 4, 5], correct: ['c', 'e', 'l', 'a', 'n'], hint: '冰島：靠近北極圈的島國，擁有火山與冰川並存的獨特地形。' },
+            { type: 'en', title: '英文國家名稱', name: 'Vietnam', blanks: [1, 2, 3, 4, 5], correct: ['i', 'e', 't', 'n', 'a'], hint: '越南：位於東南亞中南半島，擁有世界遺產下龍灣。' },
+
+            // 中文國家 (挖空兩個字)
+            { type: 'zh', title: '中文國家名稱', name: '馬來西亞', blanks: [1, 3], correct: ['來', '亞'], hint: '馬來西亞：首都為吉隆坡，是多元種族融合的熱帶國家。' },
+            { type: 'zh', title: '紐西蘭', blanks: [0, 2], correct: ['紐', '蘭'], hint: '紐西蘭：位於南太平洋，盛產奇異果，是魔戒電影的拍攝地。' },
+            { type: 'zh', title: '葡萄牙', blanks: [0, 2], correct: ['葡', '牙'], hint: '葡萄牙：位於歐洲西南端的伊比利半島，大航海時代的先驅。' },
+            { type: 'zh', title: '比利時', blanks: [1, 2], correct: ['利', '時'], hint: '比利時：首都布魯塞爾是歐盟總部，以精緻巧克力與鬆餅享譽全球。' },
+            { type: 'zh', title: '哥倫比亞', blanks: [1, 3], correct: ['倫', '亞'], hint: '哥倫比亞：位於南美洲北部，是世界著名的優質咖啡生產國。' }
         ];
 
-        // 常用國中國文字干擾庫 (8個隨機抽取)
-        const DISTRACTORS = ['日', '月', '水', '火', '風', '雷', '山', '川', '石', '田', '天', '地', '人', '心', '手', '口', '明', '高', '大', '小', '飛', '跑', '行', '止', '草', '木', '花', '果', '前', '後', '左', '右'];
+        // 常用字元干擾庫
+        const DISTRACTORS_ZH = ['印', '尼', '度', '英', '美', '法', '日', '韓', '泰', '菲', '新', '加', '西', '澳', '瑞', '中', '義', '荷', '西', '巴', '秘', '智'];
+        const DISTRACTORS_EN = ['b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'o', 'p', 'q', 'u', 'v', 'w', 'x', 'y', 'z'];
+
+        // 遊戲狀態變數
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 100;
+        let totalErrors = 0;
+        
+        let currentQuestion = null;
+        let correctSlotsCount = 0;
+
+        // 拖曳暫存
+        let activeDrag = null;
+        let originalParent = null;
+        let dragOffset = { x: 0, y: 0 };
+        let dragStartPos = { x: 0, y: 0 };
 
         // 音效控制 (Web Audio API)
         let audioCtx;
@@ -429,72 +443,69 @@
             }
         }
 
-        // 清脆編鐘鈴聲 (正解)
-        function playChimeSound() {
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(659.25, now); // E5
-            osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.15); // E6
-            gain.gain.setValueAtTime(0.12, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(now + 0.35);
-        }
-
-        // 警告低音聲 (錯選)
-        function playBuzzSound() {
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(160, now);
-            osc.frequency.linearRampToValueAtTime(90, now + 0.18);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(now + 0.18);
-        }
-
-        // 通關祝賀聲
-        function playVictorySound() {
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-            const notes = [523.25, 587.33, 659.25, 783.99, 880, 1046.50];
-            notes.forEach((freq, idx) => {
+        function playSound(type) {
+            try {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-                gain.gain.setValueAtTime(0.08, now + idx * 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(now + idx * 0.1 + 0.3);
-            });
+                
+                switch (type) {
+                    case 'click':
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(300, now);
+                        osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                        gain.gain.setValueAtTime(0.05, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.05);
+                        break;
+                    case 'chime':
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(659.25, now); // E5
+                        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+                        gain.gain.setValueAtTime(0.08, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.2);
+                        break;
+                    case 'buzz':
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(150, now);
+                        osc.frequency.linearRampToValueAtTime(80, now + 0.15);
+                        gain.gain.setValueAtTime(0.12, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.15);
+                        break;
+                    case 'victory':
+                        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                        notes.forEach((freq, idx) => {
+                            const o = audioCtx.createOscillator();
+                            const g = audioCtx.createGain();
+                            o.type = 'sine';
+                            o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                            g.gain.setValueAtTime(0.06, now + idx * 0.08);
+                            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                            o.connect(g);
+                            g.connect(audioCtx.destination);
+                            o.start();
+                            o.stop(now + idx * 0.08 + 0.3);
+                        });
+                        break;
+                }
+            } catch (err) {
+                console.warn("播放音效失敗:", err);
+            }
         }
 
-        // 遊戲運行狀態
-        let currentQuestions = []; // 隨機挑出的5題
-        let currentQuestionIndex = 0;
-        let correctCount = 0; // 當前題目填對數 (最大2)
-        let totalErrors = 0; // 總答錯次數
-        let score = 100; // 起始分數
-
-        // 拖曳狀態控制 (Pointer events 實現桌機+平板拖曳)
-        let activeDrag = null;
-        let touchOffset = { x: 0, y: 0 };
-        let originalPos = { x: 0, y: 0 };
-
-        // 打亂
+        // 打亂陣列
         function shuffle(array) {
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
@@ -511,47 +522,72 @@
             score = 100;
             currentQuestionIndex = 0;
             
-            // 從12題庫中隨機挑選不重複的5題
+            // 從10題中隨機挑選不重複的5題
             currentQuestions = shuffle(QUESTIONS).slice(0, 5);
             
             document.getElementById('resultOverlay').style.display = 'none';
             loadQuestion();
         }
 
-        // 載入題目
+        // 載入當前題目
         function loadQuestion() {
-            correctCount = 0;
-            document.getElementById('feedbackArea').style.display = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
             document.getElementById('cardsPool').style.pointerEvents = 'auto';
-            document.getElementById('progressText').textContent = `第 ${currentQuestionIndex + 1}/5 題`;
 
-            const currentQ = currentQuestions[currentQuestionIndex];
-            
-            // 1. 繪製成語文字與空格
-            const idiomDisplay = document.getElementById('idiomDisplay');
-            idiomDisplay.innerHTML = '';
+            currentQuestion = currentQuestions[currentQuestionIndex];
+            correctSlotsCount = 0;
 
-            for (let i = 0; i < 4; i++) {
-                const isBlank = currentQ.缺字.includes(i);
+            // 更新題目類型標題與進度
+            document.getElementById('titleText').textContent = currentQuestion.title;
+            document.getElementById('progressText').textContent = `ROUND ${currentQuestionIndex + 1}/5`;
+
+            // 1. 渲染國家名稱與空格
+            const countryDisplay = document.getElementById('countryDisplay');
+            countryDisplay.innerHTML = '';
+
+            const nameChars = Array.from(currentQuestion.name);
+            nameChars.forEach((char, idx) => {
+                const isBlank = currentQuestion.blanks.includes(idx);
                 if (isBlank) {
-                    const blankIndex = currentQ.缺字.indexOf(i);
                     const slot = document.createElement('div');
-                    slot.className = 'blank-box';
-                    slot.dataset.blankIndex = blankIndex; // 這是第幾個空格 (0或1)
-                    slot.dataset.expectedChar = currentQ.答案[blankIndex]; // 正解字元
-                    idiomDisplay.appendChild(slot);
+                    slot.className = 'char-slot';
+                    slot.dataset.expectedChar = char.toLowerCase();
+                    slot.id = `slot-${idx}`;
+                    countryDisplay.appendChild(slot);
                 } else {
-                    const box = document.createElement('div');
-                    box.className = 'char-box';
-                    box.textContent = currentQ.成語[i];
-                    idiomDisplay.appendChild(box);
+                    const span = document.createElement('span');
+                    span.className = 'char-item';
+                    span.textContent = char;
+                    countryDisplay.appendChild(span);
+                }
+            });
+
+            // 2. 準備字卡池 (正解卡片 + 隨機干擾卡片)
+            const blankCount = currentQuestion.blanks.length;
+            const distractorCount = 15 - blankCount;
+
+            const poolCorrect = [...currentQuestion.correct];
+            const poolDistractors = [];
+
+            // 根據中英文抽取不同干擾字
+            const distractorSrc = (currentQuestion.type === 'en') ? DISTRACTORS_EN : DISTRACTORS_ZH;
+            const shuffledDistributors = shuffle(distractorSrc);
+            
+            for (let i = 0; i < distractorCount; i++) {
+                // 確保干擾字跟正解不重複
+                const candidate = shuffledDistributors[i % shuffledDistributors.length];
+                if (!poolCorrect.includes(candidate)) {
+                    poolDistractors.push(candidate);
+                } else {
+                    // 如果重複，抓下一個
+                    poolDistractors.push(shuffledDistributors[(i + 5) % shuffledDistributors.length]);
                 }
             }
 
-            // 2. 準備字卡：2個正確答案 + 8個干擾字
-            let distractorsPicked = shuffle(DISTRACTORS.filter(c => !currentQ.答案.includes(c))).slice(0, 8);
-            let poolChars = shuffle([...currentQ.答案, ...distractorsPicked]);
+            // 合併並打亂
+            const poolChars = shuffle([...poolCorrect, ...poolDistractors]);
 
+            // 3. 渲染字卡
             const cardsPool = document.getElementById('cardsPool');
             cardsPool.innerHTML = '';
 
@@ -560,7 +596,7 @@
                 card.className = 'word-card';
                 card.textContent = char;
                 card.id = `card-${idx}`;
-                card.dataset.char = char;
+                card.dataset.char = char.toLowerCase();
 
                 // 註冊 Pointer Event 拖曳
                 bindPointerDrag(card);
@@ -569,96 +605,87 @@
             });
         }
 
-        // 手動實現 Pointer Event 拖曳 (同時兼容滑鼠與觸控)
+        // Pointer Event 拖曳徽章實現 (兼容滑鼠與觸控)
         function bindPointerDrag(card) {
             card.addEventListener('pointerdown', (e) => {
-                // 如果已經填對了或正在移動中，則無視
-                if (card.classList.contains('hidden-card')) return;
-                
+                if (card.classList.contains('locked-in')) return;
                 initAudio();
+
                 activeDrag = card;
-                
-                // 紀錄原點位置，便於拖曳失敗彈回
+                originalParent = card.parentElement;
+
                 const rect = card.getBoundingClientRect();
-                originalPos.x = card.offsetLeft;
-                originalPos.y = card.offsetTop;
+                dragStartPos.x = card.offsetLeft;
+                dragStartPos.y = card.offsetTop;
 
-                // 計算游標點擊在元素內部的相對偏差，避免元素跳動
-                touchOffset.x = e.clientX - rect.left;
-                touchOffset.y = e.clientY - rect.top;
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
 
-                // 設定拖曳中樣式
                 card.style.position = 'fixed';
-                card.style.left = (e.clientX - touchOffset.x) + 'px';
-                card.style.top = (e.clientY - touchOffset.y) + 'px';
+                card.style.left = (e.clientX - dragOffset.x) + 'px';
+                card.style.top = (e.clientY - dragOffset.y) + 'px';
                 card.classList.add('dragging-active');
-                
-                // 鎖定 Pointer
+
                 card.setPointerCapture(e.pointerId);
             });
 
             card.addEventListener('pointermove', (e) => {
                 if (activeDrag !== card) return;
-                card.style.left = (e.clientX - touchOffset.x) + 'px';
-                card.style.top = (e.clientY - touchOffset.y) + 'px';
+                card.style.left = (e.clientX - dragOffset.x) + 'px';
+                card.style.top = (e.clientY - dragOffset.y) + 'px';
             });
 
             card.addEventListener('pointerup', (e) => {
                 if (activeDrag !== card) return;
                 activeDrag = null;
                 card.releasePointerCapture(e.pointerId);
-
                 card.classList.remove('dragging-active');
 
-                // 獲取目前游標下的碰撞物（檢測空格）
-                const droppedSlot = checkCollision(e.clientX, e.clientY);
+                // 碰撞檢測是否移到插槽
+                const slot = checkSlotCollision(e.clientX, e.clientY);
 
-                if (droppedSlot) {
-                    const expectedChar = droppedSlot.dataset.expectedChar;
+                if (slot) {
+                    const expectedChar = slot.dataset.expectedChar;
                     const cardChar = card.dataset.char;
 
-                    // 配對判定
-                    if (cardChar === expectedChar && !droppedSlot.classList.contains('solved-stamp')) {
-                        // 答對了！
-                        playChimeSound();
+                    if (cardChar === expectedChar && !slot.classList.contains('snapped-correct')) {
+                        // 拖對了！嵌入鎖定
+                        playSound('chime');
                         
-                        // 蓋紅色印章效果
-                        droppedSlot.classList.add('solved-stamp');
-                        droppedSlot.innerHTML = `<span class="stamp-char">${cardChar}</span>`;
+                        slot.textContent = card.textContent;
+                        slot.classList.add('snapped-correct');
                         
-                        // 使原字卡消失
-                        card.classList.add('hidden-card');
+                        // 隱藏原本的卡片
+                        card.classList.add('hidden-card', 'locked-in');
 
-                        correctCount++;
+                        correctSlotsCount++;
 
-                        // 判斷是否兩個空格都完成了
-                        if (correctCount === 2) {
-                            showQuestionSuccess();
+                        // 判斷該題是否全部填對
+                        const blankCount = currentQuestion.blanks.length;
+                        if (correctSlotsCount === blankCount) {
+                            handleQuestionSuccess();
                         }
                     } else {
-                        // 答錯了！
-                        playBuzzSound();
-                        totalErrors++;
-                        
-                        // 扣分 (每次扣5分)
-                        score = Math.max(0, score - 5);
+                        // 拖錯了！紅閃並彈回
+                        playSound('buzz');
+                        const countryDisplay = document.getElementById('countryDisplay');
+                        countryDisplay.classList.add('error-flash');
+                        setTimeout(() => countryDisplay.classList.remove('error-flash'), 250);
 
-                        // 閃紅燈與彈回
-                        droppedSlot.classList.add('error-flash');
-                        setTimeout(() => droppedSlot.classList.remove('error-flash'), 500);
-                        
+                        totalErrors++;
+                        score = Math.max(0, score - 5); // 錯一次扣5分
+
                         resetCardPosition(card);
                     }
                 } else {
-                    // 沒有放到任何空格上，直接彈回
+                    // 放空放開彈回
                     resetCardPosition(card);
                 }
             });
         }
 
-        // 碰撞檢測：比對 clientX/Y 與所有空格的 bounding box
-        function checkCollision(clientX, clientY) {
-            const slots = document.querySelectorAll('.blank-box');
+        function checkSlotCollision(clientX, clientY) {
+            const slots = document.querySelectorAll('.char-slot');
             for (let slot of slots) {
                 const rect = slot.getBoundingClientRect();
                 if (clientX >= rect.left && clientX <= rect.right &&
@@ -669,26 +696,28 @@
             return null;
         }
 
-        // 彈回卡片
         function resetCardPosition(card) {
+            originalParent.appendChild(card);
             card.style.position = 'relative';
             card.style.left = '0px';
             card.style.top = '0px';
         }
 
-        // 當前成語成功完成
-        function showQuestionSuccess() {
-            // 停用字卡池互動
-            document.getElementById('cardsPool').style.pointerEvents = 'none';
-
-            // 顯示反饋釋義
-            const currentQ = currentQuestions[currentQuestionIndex];
-            document.getElementById('feedbackMeaning').textContent = currentQ.意思;
-            document.getElementById('feedbackArea').style.display = 'flex';
+        // 答對本題
+        function handleQuestionSuccess() {
+            document.getElementById('cardsPool').style.pointerEvents = 'none'; // 鎖定操作
+            
+            // 顯示答對回饋面板與國家解釋
+            const feedbackPanel = document.getElementById('feedbackPanel');
+            const feedbackHint = document.getElementById('feedbackHint');
+            
+            feedbackHint.textContent = currentQuestion.hint;
+            feedbackPanel.style.display = 'flex';
         }
 
-        // 點選下一題
+        // 下一題按鈕點擊
         document.getElementById('nextQuestionBtn').addEventListener('click', () => {
+            playSound('click');
             currentQuestionIndex++;
             if (currentQuestionIndex < 5) {
                 loadQuestion();
@@ -699,21 +728,23 @@
 
         // 顯示最後結算報告
         function showGameResults() {
-            playVictorySound();
+            playSound('victory');
+            
+            // 保存憑證
             localStorage.setItem('cert_idiom', 'true');
 
             let comment = '';
             if (score === 100) {
-                comment = '💮 完美全對！國學造詣極高，實乃當代文豪！';
+                comment = '💮 完美全對！世界地理大師，環遊世界第一人！';
             } else if (score >= 80) {
-                comment = '🌸 表現優異！成語積累非常深厚！';
+                comment = '🌸 表現優異！對世界各國名稱相當熟練！';
             } else if (score >= 60) {
-                comment = '📜 通過考驗！成語概念清晰，表現不錯！';
+                comment = '📜 通過考驗！世界地理觀念清晰，表現不錯！';
             } else {
                 comment = '📚 溫故知新！不要氣餒，多練習幾次就會了！';
             }
 
-            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalScore').textContent = `${score} 分`;
             document.getElementById('finalComment').textContent = comment;
             document.getElementById('resultOverlay').style.display = 'flex';
         }
@@ -723,7 +754,7 @@
             startNewGame();
         });
 
-        // 初始化加載
+        // 初始化載入
         window.addEventListener('DOMContentLoaded', () => {
             startNewGame();
         });

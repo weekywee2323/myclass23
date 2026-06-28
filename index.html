@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>歷史國文大冒險 - 闖關大地圖</title>
+    <meta name="description" content="將朝代配對、成語填字、打怪 RPG 串接成完整冒險。用手繪風地圖結合熱區點擊，支援開場封面淡出、拖曳插槽解鎖大門、冒險計時與過關統計。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #120b1e;
+            --bg-panel: rgba(22, 16, 38, 0.95);
+            --border-gold: #d4af37;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff007f;
+            --neon-green: #39ff14;
+            --neon-yellow: #ffea00;
+            --font-classical: 'Noto Serif TC', serif;
+            --font-game: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-classical);
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 0, 127, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
+            padding: 1rem;
+        }
+
+        /* 1. 全螢幕開場封面 */
+        .cover-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .cover-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 2. 大地圖容器 (維持 16:9 比例) */
+        .map-container {
+            position: relative;
+            width: 95vw;
+            max-width: 1024px;
+            aspect-ratio: 16 / 9;
+            background-color: #171126;
+            border: 4px solid var(--border-gold);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+        }
+
+        .map-background {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* 3. 右上角資訊區 (浮動條) */
+        .top-info-bar {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(18, 11, 30, 0.9);
+            border: 2px solid var(--border-gold);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .cert-summary {
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 8px rgba(255, 234, 0, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .reset-btn {
+            background: rgba(255, 0, 127, 0.1);
+            border: 1px solid var(--neon-pink);
+            color: var(--neon-pink);
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .reset-btn:hover {
+            background: var(--neon-pink);
+            color: #120b1e;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+        }
+
+        /* 4. 透明可點擊熱區 */
+        .hotspot-zone {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 12px;
+            border: 2px dashed rgba(212, 175, 55, 0);
+            background-color: rgba(255, 255, 255, 0);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 懸停發光效果 */
+        .hotspot-zone:hover {
+            border-color: rgba(0, 240, 255, 0.5);
+            background-color: rgba(0, 240, 255, 0.08);
+            box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.2), 0 0 20px rgba(0, 240, 255, 0.25);
+        }
+
+        /* 關卡熱區座標與大小 */
+        #zone-dynasty {
+            top: 20%;
+            left: 11%;
+            width: 19%;
+            height: 22%;
+        }
+
+        #zone-idiom {
+            top: 24%;
+            left: 70%;
+            width: 22%;
+            height: 20%;
+        }
+
+        #zone-warrior {
+            top: 73%;
+            left: 72%;
+            width: 20%;
+            height: 20%;
+        }
+
+        #zone-gate {
+            top: 16%;
+            left: 34%;
+            width: 32%;
+            height: 60%;
+            border-radius: 20px;
+        }
+
+        /* 5. 通關✓綠色蓋印 */
+        .stamp-check {
+            position: absolute;
+            background: #22c55e;
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: none; /* 由 JS 觸發 active 顯示 */
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 900;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.6);
+            border: 2px solid #ffffff;
+            z-index: 5;
+            pointer-events: none;
+            animation: stampGlow 1.5s infinite alternate;
+        }
+
+        @keyframes stampGlow {
+            0% { transform: scale(0.95); box-shadow: 0 0 10px rgba(57, 255, 20, 0.4); }
+            100% { transform: scale(1.05); box-shadow: 0 0 20px rgba(57, 255, 20, 0.8); }
+        }
+
+        /* 蓋印定位 */
+        #stamp-dynasty {
+            top: 17%;
+            left: 27%;
+        }
+
+        #stamp-idiom {
+            top: 21%;
+            left: 88%;
+        }
+
+        #stamp-warrior {
+            top: 70%;
+            left: 89%;
+        }
+
+        /* 6. 通關大門 Modal */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(12, 8, 25, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 16px;
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            padding: 1.8rem;
+            animation: fadeIn 0.3s ease forwards;
+            justify-content: space-between;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-header {
+            text-align: center;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+            padding-bottom: 0.8rem;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--border-gold);
+            letter-spacing: 2px;
+        }
+
+        .modal-header p {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 憑證插槽區 */
+        .slots-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 1rem 0;
+        }
+
+        .slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .slot-label {
+            font-size: 0.8rem;
+            color: var(--pastel-purple);
+            font-weight: 700;
+        }
+
+        .socket {
+            width: 75px;
+            height: 75px;
+            background: #080512;
+            border: 3px solid #332549;
+            border-radius: 50%;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .socket.dragover {
+            border-color: var(--neon-blue);
+            box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .socket.correct-snap {
+            border-color: var(--neon-green);
+            background: rgba(57, 255, 20, 0.05);
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+        }
+
+        /* 背包區 */
+        .backpack-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid rgba(212, 175, 55, 0.15);
+            border-radius: 18px;
+            padding: 0.8rem 1rem;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .backpack-title {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 4px;
+        }
+
+        .badge-pool {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            flex: 1;
+            align-items: center;
+        }
+
+        /* 憑證徽章 */
+        .cert-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2b1c4c 0%, #150f2b 100%);
+            border: 2px solid var(--border-gold);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 100;
+            transition: transform 0.15s ease;
+            touch-action: none;
+        }
+
+        .cert-badge:active {
+            cursor: grabbing;
+        }
+
+        .cert-badge.dragging {
+            opacity: 0.85;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            transform: scale(1.1);
+            border-color: var(--neon-blue);
+        }
+
+        .cert-emoji {
+            font-size: 1.3rem;
+        }
+
+        .cert-name {
+            font-size: 0.55rem;
+            color: #fbcfe8;
+            font-weight: 900;
+            margin-top: 1px;
+        }
+
+        .cert-badge.snapped {
+            width: 100%;
+            height: 100%;
+            border-width: 0;
+            background: transparent;
+            box-shadow: none;
+            cursor: default;
+        }
+        
+        .cert-badge.snapped .cert-name {
+            color: var(--neon-green);
+        }
+
+        .socket.error-flash {
+            animation: flashRed 0.25s ease-out 2;
+        }
+
+        @keyframes flashRed {
+            0%, 100% { border-color: #332549; }
+            50% { border-color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+        }
+
+        /* 7. 冒險過關畫面 */
+        .clear-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 4, 14, 0.98);
+            border-radius: 16px;
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        .clear-title {
+            font-size: 2.3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--neon-yellow) 0%, var(--neon-green) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(57, 255, 20, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .summary-card {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 1.5rem 2.5rem;
+            width: 85%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+        }
+
+        .summary-val {
+            font-family: var(--font-game);
+            font-weight: bold;
+            color: var(--neon-blue);
+            font-size: 1.15rem;
+        }
+
+        .play-again-btn {
+            font-family: var(--font-classical);
+            background: linear-gradient(135deg, var(--border-gold) 0%, #b8901c 100%);
+            color: #07040e;
+            border: 2px solid #ffffff;
+            padding: 0.8rem 2.5rem;
+            border-radius: 99px;
+            font-size: 1.15rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .play-again-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 開場封面區 -->
+    <div class="cover-overlay" id="gameCover">
+        <img src="大冒險地圖/Gemini_Generated_Image_j7q62gj7q62gj7q6.png" class="cover-image" alt="遊戲封面">
+    </div>
+
+    <!-- 2. 大地圖容器 -->
+    <div class="map-container" id="mapContainer">
+        <!-- 地圖背景圖 -->
+        <img src="大冒險地圖/Gemini_Generated_Image_m14i3fm14i3fm14i.png" class="map-background" alt="大地圖背景">
+
+        <!-- 右上角唯一資訊區 -->
+        <div class="top-info-bar">
+            <span class="cert-summary" id="certSummaryText">持有：0 / 3</span>
+            <button class="reset-btn" id="resetBtn">🔄 清除進度</button>
+        </div>
+
+        <!-- 關卡✓綠色蓋印 (定位在名牌右上角) -->
+        <div class="stamp-check" id="stamp-dynasty">✓</div>
+        <div class="stamp-check" id="stamp-idiom">✓</div>
+        <div class="stamp-check" id="stamp-warrior">✓</div>
+
+        <!-- 透明可點擊熱區 -->
+        <!-- 關卡1：朝代配對 -->
+        <div class="hotspot-zone" id="zone-dynasty" title="關卡 1：朝代配對"></div>
+
+        <!-- 關卡2：成語填字 -->
+        <div class="hotspot-zone" id="zone-idiom" title="關卡 2：成語填字"></div>
+
+        <!-- 關卡3：打怪 RPG -->
+        <div class="hotspot-zone" id="zone-warrior" title="關卡 3：打怪 RPG"></div>
+
+        <!-- 中央大門熱區 -->
+        <div class="hotspot-zone" id="zone-gate" title="中央大門"></div>
+
+        <!-- 通關大門 Modal -->
+        <div class="modal-overlay" id="gateModal">
+            <div class="modal-header">
+                <button class="modal-close-btn" id="closeGateBtn">×</button>
+                <h2>🔒 時空封印之門</h2>
+                <p>將背包中的印章拖曳嵌入正確的凹槽解鎖大門</p>
+            </div>
+
+            <!-- 插槽區 -->
+            <div class="slots-area">
+                <div class="slot-wrapper">
+                    <span class="slot-label">朝代</span>
+                    <div class="socket" id="socket-dynasty" data-expected="cert_dynasty"></div>
+                </div>
+                <div class="slot-wrapper">
+                    <span class="slot-label">成語</span>
+                    <div class="socket" id="socket-idiom" data-expected="cert_idiom"></div>
+                </div>
+                <div class="slot-wrapper">
+                    <span class="slot-label">勇者</span>
+                    <div class="socket" id="socket-warrior" data-expected="cert_warrior"></div>
+                </div>
+            </div>
+
+            <!-- 背包區 -->
+            <div class="backpack-section">
+                <span class="backpack-title">🎒 你的憑證背包</span>
+                <div class="badge-pool" id="badgePool">
+                    <!-- 由 JS 動態依 localStorage 載入擁有的憑證 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 冒險通關大結果畫面 -->
+        <div class="clear-overlay" id="clearOverlay">
+            <h2 class="clear-title">🏆 冒險完成！</h2>
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span>關卡完成度：</span>
+                    <span class="summary-val" style="color:var(--neon-green)">100% (3/3)</span>
+                </div>
+                <div class="summary-row">
+                    <span>總冒險歷時：</span>
+                    <span class="summary-val" id="totalTimeText">00 分 00 秒</span>
+                </div>
+                <div class="summary-row">
+                    <span>綜合評價：</span>
+                    <span class="summary-val" style="color:var(--neon-yellow)">國史全才勇者</span>
+                </div>
+            </div>
+            <button class="play-again-btn" id="restartAdventureBtn">再次冒險</button>
+        </div>
+    </div>
+
+    <script>
+        const gameCover = document.getElementById('gameCover');
+        const mapContainer = document.getElementById('mapContainer');
+        const certSummaryText = document.getElementById('certSummaryText');
+        const resetBtn = document.getElementById('resetBtn');
+        
+        const zoneDynasty = document.getElementById('zone-dynasty');
+        const zoneIdiom = document.getElementById('zone-idiom');
+        const zoneWarrior = document.getElementById('zone-warrior');
+        const zoneGate = document.getElementById('zone-gate');
+
+        const stampDynasty = document.getElementById('stamp-dynasty');
+        const stampIdiom = document.getElementById('stamp-idiom');
+        const stampWarrior = document.getElementById('stamp-warrior');
+
+        const gateModal = document.getElementById('gateModal');
+        const closeGateBtn = document.getElementById('closeGateBtn');
+        const badgePool = document.getElementById('badgePool');
+        
+        const clearOverlay = document.getElementById('clearOverlay');
+        const totalTimeText = document.getElementById('totalTimeText');
+        const restartAdventureBtn = document.getElementById('restartAdventureBtn');
+
+        // 音效控制 (Web Audio API)
+        let audioCtx;
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {
+                console.warn("音訊系統初始化暫緩 (等待使用者手勢互動):", e);
+            }
+        }
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                switch (type) {
+                    case 'click':
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(300, now);
+                        osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                        gain.gain.setValueAtTime(0.05, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.05);
+                        break;
+                    case 'correct':
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(523.25, now); // C5
+                        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15); // G5
+                        gain.gain.setValueAtTime(0.1, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.25);
+                        break;
+                    case 'wrong':
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(160, now);
+                        osc.frequency.linearRampToValueAtTime(80, now + 0.15);
+                        gain.gain.setValueAtTime(0.15, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(now + 0.15);
+                        break;
+                    case 'complete':
+                        const notes = [523.25, 659.25, 783.99, 880, 1046.50, 1318.51];
+                        notes.forEach((freq, idx) => {
+                            const o = audioCtx.createOscillator();
+                            const g = audioCtx.createGain();
+                            o.type = 'sine';
+                            o.frequency.setValueAtTime(freq, now + idx * 0.1);
+                            g.gain.setValueAtTime(0.08, now + idx * 0.1);
+                            g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
+                            o.connect(g);
+                            g.connect(audioCtx.destination);
+                            o.start();
+                            o.stop(now + idx * 0.1 + 0.4);
+                        });
+                        break;
+                }
+            } catch (err) {
+                console.warn("播放音效失敗:", err);
+            }
+        }
+
+        // 憑證資料對照
+        const CERTS = {
+            cert_dynasty: { name: "朝代之印", emoji: "🎴" },
+            cert_idiom: { name: "成語之印", emoji: "📝" },
+            cert_warrior: { name: "勇者之印", emoji: "⚔️" }
+        };
+
+        // 拖曳控制狀態 (Pointer Events)
+        let activeDrag = null;
+        let originalParent = null;
+        let dragOffset = { x: 0, y: 0 };
+        let dragStartPos = { x: 0, y: 0 };
+        let snappedCount = 0; // 嵌入對的插槽數量
+
+        // 載入大地圖進度
+        function loadProgress() {
+            initAudio();
+            
+            // 如果不存在冒險開始時間，則立刻初始化 (開始計時)
+            if (!localStorage.getItem('adventure_start')) {
+                localStorage.setItem('adventure_start', Date.now().toString());
+            }
+
+            let ownedCertsCount = 0;
+
+            // 關卡 1：朝代之印
+            if (localStorage.getItem('cert_dynasty') === 'true') {
+                stampDynasty.style.display = 'flex';
+                ownedCertsCount++;
+            } else {
+                stampDynasty.style.display = 'none';
+            }
+
+            // 關卡 2：成語之印
+            if (localStorage.getItem('cert_idiom') === 'true') {
+                stampIdiom.style.display = 'flex';
+                ownedCertsCount++;
+            } else {
+                stampIdiom.style.display = 'none';
+            }
+
+            // 關卡 3：勇者之印
+            if (localStorage.getItem('cert_warrior') === 'true') {
+                stampWarrior.style.display = 'flex';
+                ownedCertsCount++;
+            } else {
+                stampWarrior.style.display = 'none';
+            }
+
+            certSummaryText.textContent = `持有：${ownedCertsCount} / 3`;
+        }
+
+        // 初始化/重整大門背包徽章
+        function initGateBackpack() {
+            badgePool.innerHTML = '';
+            snappedCount = 0;
+
+            // 重設插槽狀態
+            const sockets = document.querySelectorAll('.socket');
+            sockets.forEach(socket => {
+                socket.innerHTML = '';
+                socket.className = 'socket';
+            });
+
+            // 遍歷擁有的憑證
+            Object.keys(CERTS).forEach(key => {
+                if (localStorage.getItem(key) === 'true') {
+                    const badge = document.createElement('div');
+                    badge.className = 'cert-badge';
+                    badge.id = `badge-${key}`;
+                    badge.dataset.certKey = key;
+                    badge.innerHTML = `
+                        <span class="cert-emoji">${CERTS[key].emoji}</span>
+                        <span class="cert-name">${CERTS[key].name}</span>
+                    `;
+
+                    // 綁定手動拖曳
+                    bindPointerDrag(badge);
+                    badgePool.appendChild(badge);
+                }
+            });
+
+            if (badgePool.children.length === 0) {
+                badgePool.innerHTML = '<span style="font-size:0.8rem; color:#64748b;">背包空空如也，快去挑戰關卡吧！</span>';
+            }
+        }
+
+        // Pointer Events 拖曳徽章實現 (兼容滑鼠與觸控)
+        function bindPointerDrag(badge) {
+            badge.addEventListener('pointerdown', (e) => {
+                if (badge.classList.contains('locked-in')) return;
+                initAudio();
+
+                activeDrag = badge;
+                originalParent = badge.parentElement;
+
+                const rect = badge.getBoundingClientRect();
+                dragStartPos.x = badge.offsetLeft;
+                dragStartPos.y = badge.offsetTop;
+
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+
+                badge.style.position = 'fixed';
+                badge.style.left = (e.clientX - dragOffset.x) + 'px';
+                badge.style.top = (e.clientY - dragOffset.y) + 'px';
+                badge.classList.add('dragging');
+
+                badge.setPointerCapture(e.pointerId);
+            });
+
+            badge.addEventListener('pointermove', (e) => {
+                if (activeDrag !== badge) return;
+                badge.style.left = (e.clientX - dragOffset.x) + 'px';
+                badge.style.top = (e.clientY - dragOffset.y) + 'px';
+            });
+
+            badge.addEventListener('pointerup', (e) => {
+                if (activeDrag !== badge) return;
+                activeDrag = null;
+                badge.releasePointerCapture(e.pointerId);
+                badge.classList.remove('dragging');
+
+                // 碰撞檢測是否移到插槽
+                const socket = checkSocketCollision(e.clientX, e.clientY);
+
+                if (socket) {
+                    const expectedKey = socket.dataset.expected;
+                    const badgeKey = badge.dataset.certKey;
+
+                    if (badgeKey === expectedKey && !socket.querySelector('.cert-badge')) {
+                        // 拖對了！嵌入鎖定
+                        playSound('correct');
+                        
+                        socket.appendChild(badge);
+                        socket.classList.add('correct-snap');
+                        
+                        // 重置樣式使充滿 socket
+                        badge.style.position = 'relative';
+                        badge.style.left = '0px';
+                        badge.style.top = '0px';
+                        badge.classList.add('snapped', 'locked-in');
+
+                        snappedCount++;
+
+                        // 3個凹槽都正確放入
+                        if (snappedCount === 3) {
+                            setTimeout(completeAdventure, 400);
+                        }
+                    } else {
+                        // 拖錯了！紅閃並退回背包
+                        playSound('wrong');
+                        socket.classList.add('error-flash');
+                        setTimeout(() => socket.classList.remove('error-flash'), 500);
+
+                        resetBadgePosition(badge);
+                    }
+                } else {
+                    // 放手在空白處，直接退回背包
+                    resetBadgePosition(badge);
+                }
+            });
+        }
+
+        function checkSocketCollision(clientX, clientY) {
+            const sockets = document.querySelectorAll('.socket');
+            for (let socket of sockets) {
+                const rect = socket.getBoundingClientRect();
+                if (clientX >= rect.left && clientX <= rect.right &&
+                    clientY >= rect.top && clientY <= rect.bottom) {
+                    return socket;
+                }
+            }
+            return null;
+        }
+
+        function resetBadgePosition(badge) {
+            originalParent.appendChild(badge);
+            badge.style.position = 'relative';
+            badge.style.left = '0px';
+            badge.style.top = '0px';
+        }
+
+        // 完成大冒險
+        function completeAdventure() {
+            playSound('complete');
+            
+            // 計算歷時時間
+            const start = parseInt(localStorage.getItem('adventure_start') || Date.now().toString());
+            const elapsed = Date.now() - start;
+            
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            
+            totalTimeText.textContent = `${minutes} 分 ${seconds} 秒`;
+            
+            clearOverlay.style.display = 'flex';
+        }
+
+        // 點擊熱區事件
+        zoneDynasty.addEventListener('click', () => {
+            playSound('click');
+            window.location.href = "示範1_朝代配對/index.html";
+        });
+
+        zoneIdiom.addEventListener('click', () => {
+            playSound('click');
+            window.location.href = "示範2_成語填字/index.html";
+        });
+
+        zoneWarrior.addEventListener('click', () => {
+            playSound('click');
+            window.location.href = "示範3_打怪RPG/index.html";
+        });
+
+        zoneGate.addEventListener('click', () => {
+            playSound('click');
+            initGateBackpack();
+            gateModal.classList.add('active');
+        });
+
+        closeGateBtn.addEventListener('click', () => {
+            playSound('click');
+            gateModal.classList.remove('active');
+        });
+
+        // 封面點擊開場事件
+        gameCover.addEventListener('click', () => {
+            initAudio();
+            playSound('click');
+            gameCover.style.opacity = '0';
+            sessionStorage.setItem('cover_shown', 'true');
+            setTimeout(() => {
+                gameCover.style.display = 'none';
+            }, 800);
+        });
+
+        // 清除進度
+        resetBtn.addEventListener('click', () => {
+            if (confirm('確定要清除所有關卡進度與計時，重新開始冒險嗎？')) {
+                localStorage.removeItem('cert_dynasty');
+                localStorage.removeItem('cert_idiom');
+                localStorage.removeItem('cert_warrior');
+                localStorage.removeItem('adventure_start');
+                sessionStorage.removeItem('cover_shown');
+                
+                playSound('click');
+                window.location.reload();
+            }
+        });
+
+        // 再次冒險
+        restartAdventureBtn.addEventListener('click', () => {
+            // 清除所有的 storage
+            localStorage.removeItem('cert_dynasty');
+            localStorage.removeItem('cert_idiom');
+            localStorage.removeItem('cert_warrior');
+            localStorage.removeItem('adventure_start');
+            sessionStorage.removeItem('cover_shown');
+
+            // 隱藏 overlays
+            clearOverlay.style.display = 'none';
+            gateModal.classList.remove('active');
+            
+            // 重新顯示封面與載入
+            gameCover.style.display = 'flex';
+            gameCover.style.opacity = '1';
+            
+            loadProgress();
+            playSound('click');
+        });
+
+        // 頁面加載初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            // 檢查封面是否已經顯示過
+            if (sessionStorage.getItem('cover_shown') === 'true') {
+                gameCover.style.display = 'none';
+            } else {
+                gameCover.style.display = 'flex';
+            }
+            loadProgress();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>歡樂打地鼠 - 我的第二個小遊戲</title>
+    <meta name="description" content="一個可愛卡通風格、高畫質的打地鼠遊戲。具備精緻的動畫、計分懲罰、浮動文字特效與音效。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-sky: linear-gradient(to bottom, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%);
+            --grass-green: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            --hole-brown: #5c4033;
+            --primary-yellow: #facc15;
+            --accent-orange: #f97316;
+            --text-dark: #0f172a;
+            --border-round: 24px;
+            --font-cartoon: 'Fredoka One', 'Noto Sans TC', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: var(--font-cartoon);
+            background: var(--bg-sky);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 1rem;
+        }
+
+        /* 遊戲主視窗 */
+        .game-card {
+            background: #ffffff;
+            border: 6px solid var(--text-dark);
+            border-radius: var(--border-round);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 0 rgba(15, 23, 42, 0.15), 0 30px 60px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+
+        /* 頂部控制列 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .dash-item {
+            background: #f8fafc;
+            border: 3px solid var(--text-dark);
+            border-radius: 16px;
+            padding: 0.6rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 var(--text-dark);
+        }
+
+        .dash-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 900;
+        }
+
+        .dash-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-dark);
+        }
+
+        .dash-value.high {
+            color: var(--accent-orange);
+        }
+
+        .dash-value.time {
+            color: #ef4444;
+        }
+
+        /* 倒數計時條 */
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border: 3px solid var(--text-dark);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(to right, #ef4444, #facc15, #22c55e);
+            border-radius: 99px;
+            transition: width 0.1s linear;
+        }
+
+        /* 地鼠草地區域 */
+        .lawn-grid {
+            background: var(--grass-green);
+            border: 4px solid var(--text-dark);
+            border-radius: 20px;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            aspect-ratio: 1;
+            box-shadow: inset 0 6px 0 rgba(255, 255, 255, 0.25);
+            position: relative;
+        }
+
+        /* 泥土洞口 */
+        .hole-container {
+            position: relative;
+            background: transparent;
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            cursor: pointer;
+        }
+
+        /* 泥土堆的底部陰影（製造立體感） */
+        .hole {
+            width: 100%;
+            height: 70%;
+            background: var(--hole-brown);
+            border: 3px solid var(--text-dark);
+            border-radius: 50% / 40% 40% 60% 60%;
+            box-shadow: inset 0 8px 0 rgba(0,0,0,0.4), 0 4px 0 rgba(0,0,0,0.15);
+            position: absolute;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 2;
+        }
+
+        /* 草皮裝飾遮罩，地鼠會從草皮後方、洞口中間冒出 */
+        .hole-front {
+            width: 96%;
+            height: 35%;
+            background: #22c55e;
+            border-top: 3px solid var(--text-dark);
+            position: absolute;
+            bottom: -1px;
+            left: 2%;
+            border-radius: 50% / 100% 100% 0 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* 地鼠 */
+        .mole {
+            font-size: 3.5rem;
+            line-height: 1;
+            position: absolute;
+            bottom: -5px;
+            text-align: center;
+            width: 100%;
+            transform: translateY(105%);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+            z-index: 3;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hole-container.active .mole {
+            transform: translateY(5%);
+        }
+
+        /* 當地鼠被敲打時的震動/擊中縮小特效 */
+        .mole.hit {
+            animation: moleHit 0.15s ease-out forwards;
+        }
+
+        @keyframes moleHit {
+            0% { transform: scale(1) translateY(5%); }
+            50% { transform: scale(1.3) rotate(15deg); }
+            100% { transform: scale(0) translateY(105%); }
+        }
+
+        /* 遊戲覆蓋彈窗 */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(254, 240, 138, 0.95); /* 可愛黃色底 */
+            border-radius: calc(var(--border-round) - 6px);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 4px dashed var(--accent-orange);
+            margin: 0;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .overlay-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-orange);
+            text-shadow: 2px 2px 0 var(--text-dark);
+            transform: rotate(-3deg);
+            margin-bottom: 0.5rem;
+        }
+
+        .score-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background: white;
+            border: 3px solid var(--text-dark);
+            padding: 1.2rem 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 6px 0 var(--text-dark);
+        }
+
+        .action-btn {
+            background: var(--primary-yellow);
+            color: var(--text-dark);
+            border: 3px solid var(--text-dark);
+            padding: 0.9rem 2.2rem;
+            border-radius: 99px;
+            font-size: 1.25rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 0 var(--text-dark);
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 var(--text-dark);
+            background: #fef08a;
+        }
+
+        .action-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 var(--text-dark);
+        }
+
+        /* 漂浮文字特效 (+10 / -5) */
+        .floating-score {
+            position: absolute;
+            font-size: 1.4rem;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 5;
+            animation: floatUp 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .floating-score.plus {
+            color: #4ade80; /* 綠色 */
+        }
+
+        .floating-score.minus {
+            color: #f87171; /* 紅色 */
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+        }
+
+        /* 卡通雲朵背景裝飾 */
+        .cloud {
+            position: absolute;
+            background: #fff;
+            border-radius: 99px;
+            opacity: 0.85;
+            animation: moveClouds 20s linear infinite;
+            z-index: -1;
+        }
+
+        .cloud::before, .cloud::after {
+            content: '';
+            position: absolute;
+            background: #fff;
+            border-radius: 50%;
+        }
+
+        .cloud-1 {
+            width: 120px;
+            height: 40px;
+            top: 10%;
+            left: -150px;
+            animation-duration: 25s;
+        }
+        .cloud-1::before { width: 50px; height: 50px; top: -20px; left: 15px; }
+        .cloud-1::after { width: 70px; height: 70px; top: -35px; left: 40px; }
+
+        .cloud-2 {
+            width: 80px;
+            height: 30px;
+            top: 25%;
+            left: -100px;
+            animation-delay: 5s;
+            animation-duration: 18s;
+        }
+        .cloud-2::before { width: 35px; height: 35px; top: -15px; left: 10px; }
+        .cloud-2::after { width: 45px; height: 45px; top: -22px; left: 25px; }
+
+        @keyframes moveClouds {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(calc(100vw + 150px)); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 雲朵裝飾 -->
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+
+    <div class="game-card" id="gameCard">
+        <!-- 儀表板 -->
+        <div class="dashboard">
+            <div class="dash-item">
+                <span class="dash-label">SCORE 分數</span>
+                <span class="dash-value" id="score">0</span>
+            </div>
+            <div class="dash-item">
+                <span class="dash-label">TIME 時間</span>
+                <span class="dash-value time" id="timer">30s</span>
+            </div>
+        </div>
+
+        <!-- 倒數計時條 -->
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="timerBar"></div>
+        </div>
+
+        <!-- 3x3 泥土草地 -->
+        <div class="lawn-grid" id="lawnGrid">
+            <!-- 9 個地鼠洞 -->
+            <div class="hole-container" data-index="0">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="1">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="2">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="3">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="4">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="5">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="6">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="7">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+            <div class="hole-container" data-index="8">
+                <div class="hole">
+                    <div class="mole">🐹</div>
+                </div>
+                <div class="hole-front"></div>
+            </div>
+        </div>
+
+        <!-- 遊戲覆蓋彈窗 -->
+        <div class="overlay active" id="gameOverlay">
+            <h2 class="overlay-title" id="overlayTitle">歡樂打地鼠</h2>
+            <div class="score-info" id="scoreInfo" style="display: none;">
+                <span class="dash-label">您的最終得分</span>
+                <span class="dash-value" id="finalScore" style="font-size: 2.2rem; margin: 0.3rem 0;">0</span>
+                <span class="dash-label" id="recordTip" style="color: var(--accent-orange); font-size: 0.8rem;"></span>
+            </div>
+            <button class="action-btn" id="startBtn">開始遊戲</button>
+        </div>
+    </div>
+
+    <script>
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const timerBar = document.getElementById('timerBar');
+        const startBtn = document.getElementById('startBtn');
+        const overlay = document.getElementById('gameOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const scoreInfo = document.getElementById('scoreInfo');
+        const finalScoreEl = document.getElementById('finalScore');
+        const recordTipEl = document.getElementById('recordTip');
+        const holeContainers = document.querySelectorAll('.hole-container');
+        const gameCard = document.getElementById('gameCard');
+
+        // 音效控制
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // 擊中地鼠的可愛「啵」音效
+        function playHitSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+        }
+
+        // 敲空洞的「咚」警告聲
+        function playMissSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        }
+
+        // 遊戲結束音效
+        function playGameOverSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2); // A5
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.45);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.45);
+        }
+
+        // 遊戲變數
+        let score = 0;
+        let timeLeft = 30;
+        let gameRunning = false;
+        let popTimer;
+        let countdownTimer;
+        let activeMoles = new Set(); // 記錄目前哪些洞有地鼠
+
+        // 開始遊戲
+        function startGame() {
+            initAudio();
+            score = 0;
+            timeLeft = 30;
+            activeMoles.clear();
+            scoreEl.textContent = score;
+            timerEl.textContent = timeLeft + 's';
+            timerBar.style.width = '100%';
+            
+            // 移除所有洞口的地鼠狀態與擊中特效
+            holeContainers.forEach(container => {
+                container.classList.remove('active');
+                const mole = container.querySelector('.mole');
+                mole.classList.remove('hit');
+            });
+
+            overlay.classList.remove('active');
+            gameRunning = true;
+
+            // 啟動倒數計時
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = timeLeft + 's';
+                timerBar.style.width = (timeLeft / 30 * 100) + '%';
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            // 啟動地鼠冒出機制
+            popMoles();
+        }
+
+        // 地鼠隨機冒出
+        function popMoles() {
+            if (!gameRunning) return;
+
+            // 隨機選擇洞口 (如果地鼠低於同時存在的最大上限)
+            const maxSimultaneous = timeLeft > 15 ? 2 : 3; // 剩不到 15 秒時難度提高，最多同時出 3 隻
+            const numToPop = Math.floor(Math.random() * maxSimultaneous) + 1;
+
+            for (let i = 0; i < numToPop; i++) {
+                const availableHoles = [];
+                holeContainers.forEach((c, index) => {
+                    if (!c.classList.contains('active')) {
+                        availableHoles.push(index);
+                    }
+                });
+
+                if (availableHoles.length > 0) {
+                    const randomIndex = availableHoles[Math.floor(Math.random() * availableHoles.length)];
+                    showMole(randomIndex);
+                }
+            }
+
+            // 設定下一批地鼠冒出的時間 (隨著時間越短，冒出頻率越快)
+            const nextPopDelay = timeLeft > 15 ? 1000 : 700;
+            popTimer = setTimeout(popMoles, nextPopDelay);
+        }
+
+        // 顯示單隻地鼠並設定自動縮回
+        function showMole(holeIndex) {
+            const container = holeContainers[holeIndex];
+            const mole = container.querySelector('.mole');
+            
+            container.classList.add('active');
+            mole.classList.remove('hit');
+            activeMoles.add(holeIndex);
+
+            // 1.5 秒後地鼠自動縮回
+            const timeoutId = setTimeout(() => {
+                if (container.classList.contains('active') && activeMoles.has(holeIndex)) {
+                    container.classList.remove('active');
+                    activeMoles.delete(holeIndex);
+                }
+            }, 1500);
+
+            // 把 timeoutID 綁定在 DOM 上，以便被點擊時取消計時
+            container.dataset.timeoutId = timeoutId;
+        }
+
+        // 點擊事件處理
+        holeContainers.forEach((container, index) => {
+            container.addEventListener('mousedown', (e) => {
+                if (!gameRunning) return;
+
+                // 取得點擊在網格內的座標，做漂浮特效
+                const rect = gameCard.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                if (container.classList.contains('active') && activeMoles.has(index)) {
+                    // 點到地鼠：加 10 分，地鼠立刻消失
+                    score += 10;
+                    scoreEl.textContent = score;
+                    playHitSound();
+
+                    // 取消自動縮回定時器
+                    clearTimeout(parseInt(container.dataset.timeoutId));
+                    activeMoles.delete(index);
+
+                    // 觸發擊中特效
+                    const mole = container.querySelector('.mole');
+                    mole.classList.add('hit');
+                    
+                    // 顯示漂浮文字 +10
+                    createFloatingText('+10', clickX, clickY, true);
+
+                    // 動畫播放完後移除 active
+                    setTimeout(() => {
+                        container.classList.remove('active');
+                        mole.classList.remove('hit');
+                    }, 150);
+                } else {
+                    // 點到空洞：扣 5 分
+                    score -= 5;
+                    scoreEl.textContent = score;
+                    playMissSound();
+
+                    // 顯示漂浮文字 -5
+                    createFloatingText('-5', clickX, clickY, false);
+                }
+            });
+        });
+
+        // 建立漂浮分數效果
+        function createFloatingText(text, x, y, isPlus) {
+            const el = document.createElement('div');
+            el.textContent = text;
+            el.className = `floating-score ${isPlus ? 'plus' : 'minus'}`;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            gameCard.appendChild(el);
+
+            // 動畫播完後自我銷毀
+            setTimeout(() => {
+                el.remove();
+            }, 800);
+        }
+
+        // 遊戲結束
+        function endGame() {
+            gameRunning = false;
+            clearInterval(countdownTimer);
+            clearTimeout(popTimer);
+            playGameOverSound();
+
+            // 移除所有洞的地鼠
+            holeContainers.forEach(container => {
+                container.classList.remove('active');
+                clearTimeout(parseInt(container.dataset.timeoutId));
+            });
+
+            // 讀取最高分數紀錄
+            let bestScore = parseInt(localStorage.getItem('moleHighScore') || '0');
+            let recordText = '';
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('moleHighScore', bestScore);
+                recordText = '🎉 創下最高新紀錄！';
+            } else {
+                recordText = `最高歷史紀錄：${bestScore} 分`;
+            }
+
+            // 更新彈窗內容
+            overlayTitle.textContent = "時間到！";
+            finalScoreEl.textContent = score;
+            recordTipEl.textContent = recordText;
+            scoreInfo.style.display = "flex";
+            startBtn.textContent = "再玩一次";
+            overlay.classList.add('active');
+        }
+
+        startBtn.addEventListener('click', () => {
+            startGame();
+        });
+    </script>
+</body>
+</html>

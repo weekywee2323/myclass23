@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RPG 知識打怪大冒險 - 國中互動學習教材</title>
+    <meta name="description" content="像素風格的 RPG 進階知識打怪遊戲。採用 fetch 動態載入題庫，結合金幣商店、道具背包與復活判定。">
+    
+    <!-- Google Fonts: 像素字型與中文黑體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-black: #0c0813;
+            --neon-blue: #00f0ff;
+            --neon-pink: #ff007f;
+            --neon-yellow: #ffea00;
+            --neon-green: #39ff14;
+            --neon-purple: #bd00ff;
+            --border-pixel: 4px solid #1e152a;
+            --font-pixel: 'Press Start 2P', monospace;
+            --font-zh: 'Noto Sans TC', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-zh);
+            background-color: var(--bg-black);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(189, 0, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
+        }
+
+        /* 遊戲主要框架 - 像素街機風格 */
+        .arcade-cabinet {
+            background: #150f22;
+            border: 6px solid #110c1c;
+            border-radius: 20px;
+            width: 92vw;
+            max-width: 480px;
+            height: 90vh;
+            max-height: 800px;
+            box-shadow: 0 0 30px rgba(189, 0, 255, 0.25), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 載入動畫覆蓋層 */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-black);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 240, 255, 0.1);
+            border-left-color: var(--neon-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: var(--font-pixel);
+            font-size: 0.8rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--neon-blue);
+            letter-spacing: 1.5px;
+        }
+
+        /* 頂部狀態列 */
+        .top-status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0c0813;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 4px solid #1e152a;
+        }
+
+        .stage-title {
+            font-family: var(--font-pixel);
+            font-size: 0.75rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+
+        .coin-counter {
+            font-family: var(--font-pixel);
+            font-size: 0.8rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 5px var(--neon-yellow);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: transform 0.1s ease;
+        }
+
+        .coin-counter.pop {
+            transform: scale(1.3);
+        }
+
+        /* 戰鬥畫面 - 頂半部 */
+        .battle-arena {
+            flex: 1.1;
+            background: linear-gradient(to bottom, #1d132b 0%, #150f22 100%);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            position: relative;
+            border-bottom: 4px solid #1e152a;
+        }
+
+        /* 暴擊紅閃 */
+        .battle-arena.critical-flash {
+            animation: critFlash 0.3s ease-out;
+        }
+
+        /* 答對綠閃 */
+        .battle-arena.correct-flash {
+            animation: correctFlash 0.2s ease-out;
+        }
+
+        /* 答錯震屏 */
+        .battle-arena.shake {
+            animation: arenaShake 0.3s ease-in-out;
+        }
+
+        @keyframes critFlash {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(255, 0, 127, 0.4); }
+        }
+        @keyframes correctFlash {
+            0%, 100% { background: transparent; }
+            50% { background: rgba(57, 255, 20, 0.2); }
+        }
+        @keyframes arenaShake {
+            0%, 100% { transform: translate(0, 0); }
+            15% { transform: translate(-8px, 4px); }
+            30% { transform: translate(6px, -4px); }
+            45% { transform: translate(-6px, 2px); }
+            60% { transform: translate(4px, 4px); }
+            75% { transform: translate(-2px, -2px); }
+        }
+
+        /* 暴擊浮動大字 */
+        .crit-text {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-family: var(--font-pixel);
+            font-size: 1.8rem;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 10px #ff0000, 0 0 20px #ff007f;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            animation: critPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes critPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(0.8); opacity: 0; }
+        }
+
+        /* 戰鬥雙方佈局 */
+        .entities-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 0.5rem;
+        }
+
+        .fighter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 45%;
+        }
+
+        .avatar {
+            font-size: 3.5rem;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+            animation: float 2.5s ease-in-out infinite;
+        }
+
+        .monster-avatar {
+            animation-delay: 1.2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .fighter-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #9d8db5;
+        }
+
+        /* HP血條 */
+        .hp-bar-outer {
+            width: 100%;
+            height: 14px;
+            background: #110c1c;
+            border: 2px solid #332549;
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hp-bar-inner {
+            height: 100%;
+            width: 100%;
+            background: var(--neon-green);
+            border-radius: 99px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        }
+
+        /* 血量臨界顏色樣式 */
+        .hp-yellow {
+            background-color: var(--neon-yellow);
+        }
+
+        .hp-red {
+            background-color: var(--neon-pink);
+            animation: hpBlink 0.5s infinite alternate;
+        }
+
+        @keyframes hpBlink {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .hp-text {
+            font-family: var(--font-pixel);
+            font-size: 0.5rem;
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 2px;
+            left: 0;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #000;
+            font-weight: bold;
+        }
+
+        /* 題目區塊 - 底半部 */
+        .quiz-panel {
+            flex: 1.2;
+            background: #0c0813;
+            padding: 1rem 1.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .question-box {
+            background: #150f22;
+            border: 2px solid rgba(189, 0, 255, 0.2);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 700;
+            color: #f5ece1;
+            min-height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* 選項按鈕組 */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .opt-btn {
+            background: #1e152a;
+            border: 2px solid #332549;
+            border-radius: 10px;
+            color: #e2e8f0;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .opt-btn:hover {
+            background: #2b1f3c;
+            border-color: var(--neon-blue);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+        }
+
+        .opt-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* 答錯時顯示答案的計時器 */
+        .answer-reveal {
+            font-size: 0.85rem;
+            text-align: center;
+            color: var(--neon-pink);
+            font-weight: 700;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* 底欄背包快捷 */
+        .bottom-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0c0813;
+            padding: 0.5rem 1.2rem;
+            border-top: 2px solid #1e152a;
+        }
+
+        .action-icon-btn {
+            background: #1e152a;
+            border: 2px solid #332549;
+            border-radius: 8px;
+            color: #f1f5f9;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .action-icon-btn:hover {
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 8px rgba(189, 0, 255, 0.3);
+            background: #271b37;
+        }
+
+        /* 背包彈窗 */
+        .inventory-drawer {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            background: #150f22;
+            border-top: 4px solid var(--neon-purple);
+            transition: bottom 0.3s ease;
+            z-index: 80;
+            padding: 1.2rem;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+        }
+
+        .inventory-drawer.active {
+            bottom: 0;
+        }
+
+        .drawer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(189, 0, 255, 0.2);
+            padding-bottom: 0.5rem;
+        }
+
+        .drawer-title {
+            font-weight: 900;
+            color: var(--neon-purple);
+            font-size: 1.05rem;
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .inv-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 0.6rem 0.8rem;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .use-btn {
+            background: var(--neon-green);
+            color: #0c0813;
+            border: none;
+            border-radius: 6px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .use-btn:disabled {
+            background: #475569;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* 商店覆蓋介面 (木紋風格) */
+        .shop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #27160c 0%, #3e271a 100%); /* 木紋深褐色 */
+            border-radius: 14px;
+            z-index: 70;
+            display: none;
+            flex-direction: column;
+            padding: 1.5rem;
+            overflow-y: auto;
+            border: 4px solid var(--neon-yellow);
+        }
+
+        .shop-header {
+            text-align: center;
+            margin-bottom: 1.2rem;
+            border-bottom: 3px double var(--neon-yellow);
+            padding-bottom: 0.5rem;
+        }
+
+        .shop-header h2 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        .shop-shelf {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .shop-item-card {
+            background: rgba(255,255,255,0.03);
+            border: 2px solid #5b3e2b;
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .shop-item-card:hover {
+            border-color: var(--neon-yellow);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .item-name-tag {
+            font-weight: 900;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        .item-effect-desc {
+            font-size: 0.75rem;
+            color: #bfa593;
+        }
+
+        .buy-btn {
+            background: var(--neon-yellow);
+            color: #27160c;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 3px 0 #000;
+        }
+
+        .buy-btn:hover {
+            background: #ffea70;
+        }
+
+        .buy-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #000;
+        }
+
+        .buy-btn:disabled {
+            background: #4a3c31;
+            color: #7c685b;
+            border-color: #33251c;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 遊戲過關與死亡紅色覆蓋層 */
+        .status-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 90;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            text-align: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .status-overlay.gameover {
+            background: rgba(139, 0, 0, 0.95); /* 死亡紅底 */
+            border: 4px solid #ff0055;
+        }
+
+        .status-overlay.victory {
+            background: rgba(12, 8, 19, 0.96); /* 通關藍底 */
+            border: 4px solid var(--neon-blue);
+        }
+
+        .overlay-title {
+            font-family: var(--font-pixel);
+            font-size: 1.8rem;
+            font-weight: 900;
+            text-shadow: 3px 3px 0 #000;
+            margin-bottom: 0.5rem;
+        }
+
+        .gameover .overlay-title {
+            color: #ff0055;
+            text-shadow: 0 0 10px #ff0055;
+        }
+
+        .victory .overlay-title {
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        .stats-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 1.2rem;
+            border-radius: 16px;
+            width: 85%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            font-size: 0.9rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .action-btn {
+            font-family: var(--font-zh);
+            background: var(--neon-purple);
+            color: #ffffff;
+            border: 2px solid #ffffff;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(189, 0, 255, 0.4);
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(189, 0, 255, 0.6);
+        }
+
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="arcade-cabinet">
+        <!-- 載入動畫遮罩 -->
+        <div class="loading-screen" id="loadingScreen">
+            <div class="spinner"></div>
+            <div class="loading-text">LOADING QUESTS...</div>
+        </div>
+
+        <!-- 頂部列 -->
+        <div class="top-status-bar">
+            <!-- 回到大地圖按鈕 -->
+            <a href="../index.html" style="background: #1e152a; color: #f1f5f9; border: 2px solid #332549; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; text-decoration: none; font-weight: bold; transition: all 0.15s ease; display: inline-block;">← 回到大地圖</a>
+            <div class="stage-title" id="stageTitle">STAGE 1/5</div>
+            <div class="coin-counter" id="coinCounter">💰 0</div>
+        </div>
+
+        <!-- 戰鬥視窗 -->
+        <div class="battle-arena" id="battleArena">
+            <!-- 暴擊浮動字 -->
+            <div class="crit-text" id="critPopText" style="display: none;">CRITICAL!</div>
+
+            <div class="entities-container">
+                <!-- 我方巫師 -->
+                <div class="fighter">
+                    <div class="avatar">🧙</div>
+                    <div class="fighter-name">巫師 (玩家)</div>
+                    <div class="hp-bar-outer">
+                        <div class="hp-bar-inner" id="playerHPBar"></div>
+                        <div class="hp-text" id="playerHPText">100/100</div>
+                    </div>
+                </div>
+
+                <!-- 怪物 -->
+                <div class="fighter">
+                    <div class="avatar monster-avatar" id="monsterAvatar">🐺</div>
+                    <div class="fighter-name" id="monsterName">野狼</div>
+                    <div class="hp-bar-outer">
+                        <div class="hp-bar-inner" id="monsterHPBar"></div>
+                        <div class="hp-text" id="monsterHPText">100/100</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 題目面版區 -->
+        <div class="quiz-panel">
+            <div class="question-box" id="questionBox">載入題目中...</div>
+            
+            <!-- 選項按鈕組 -->
+            <div class="options-grid" id="optionsGrid">
+                <button class="opt-btn" id="opt-0">選項 A</button>
+                <button class="opt-btn" id="opt-1">選項 B</button>
+                <button class="opt-btn" id="opt-2">選項 C</button>
+                <button class="opt-btn" id="opt-3">選項 D</button>
+            </div>
+            
+            <div class="answer-reveal" id="answerReveal" style="display: none;"></div>
+        </div>
+
+        <!-- 底列背包與道具 -->
+        <div class="bottom-actions">
+            <button class="action-icon-btn" id="openBagBtn">🎒 背包</button>
+            <div style="font-size: 0.75rem; color: #64748b; font-weight: 700;">下一題攻擊加成：<span id="crystalStatus" style="color: #64748b;">無</span></div>
+        </div>
+
+        <!-- 背包抽屜 (預設收起) -->
+        <div class="inventory-drawer" id="inventoryDrawer">
+            <div class="drawer-header">
+                <span class="drawer-title">🎒 背包與道具</span>
+                <button class="close-btn" id="closeBagBtn">×</button>
+            </div>
+            <div class="inv-item-row">
+                <div>
+                    <strong>🧪 紅藥水</strong> (回復 50 HP)
+                    <div style="font-size: 0.7rem; color: #94a3b8;">擁有數量: <span id="bagPotionCount">0</span></div>
+                </div>
+                <button class="use-btn" id="usePotionBtn">使用</button>
+            </div>
+            <div class="inv-item-row">
+                <div>
+                    <strong>🛡️ 救命符</strong> (復活鎖定 1 HP)
+                    <div style="font-size: 0.7rem; color: #94a3b8;">擁有數量: <span id="bagTalismanCount">0</span></div>
+                </div>
+                <button class="use-btn" style="background:#475569; color:#94a3b8;" disabled>被動</button>
+            </div>
+        </div>
+
+        <!-- 商店介面 (自動觸開) -->
+        <div class="shop-overlay" id="shopOverlay">
+            <div class="shop-header">
+                <h2>🏬 魔法補給商舖</h2>
+                <p style="font-size:0.75rem; color:var(--neon-yellow); margin-top:2px;">通關獎勵發放完畢！挑選幾樣道具裝備自己吧！</p>
+                <div style="font-size: 0.95rem; color:#ffffff; font-weight:900; margin-top:6px;">
+                    手頭存金：<span id="shopCoins" style="color: var(--neon-yellow);">💰 0</span>
+                </div>
+            </div>
+            <div class="shop-shelf">
+                <!-- 道具1 -->
+                <div class="shop-item-card">
+                    <div class="item-info">
+                        <span class="item-name-tag">🧪 紅藥水</span>
+                        <span class="item-effect-desc">立即恢復 50 點 HP (可戰鬥中服用)</span>
+                    </div>
+                    <button class="buy-btn" id="buy-potion" data-price="30">30 💰</button>
+                </div>
+                <!-- 道具2 -->
+                <div class="shop-item-card">
+                    <div class="item-info">
+                        <span class="item-name-tag">💎 攻擊水晶</span>
+                        <span class="item-effect-desc">下一題答對觸發暴擊傷害：怪 HP -50</span>
+                    </div>
+                    <button class="buy-btn" id="buy-crystal" data-price="40">40 💰</button>
+                </div>
+                <!-- 道具3 -->
+                <div class="shop-item-card">
+                    <div class="item-info">
+                        <span class="item-name-tag">🛡️ 救命符</span>
+                        <span class="item-effect-desc">HP歸零時自動消耗防死，復活保持 1 HP</span>
+                    </div>
+                    <button class="buy-btn" id="buy-talisman" data-price="80">80 💰</button>
+                </div>
+            </div>
+            <button class="action-btn" id="leaveShopBtn" style="margin-top: 1rem; align-self: center;">前往下一關</button>
+        </div>
+
+        <!-- 結束與死亡紅底覆蓋層 -->
+        <div class="status-overlay" id="statusOverlay">
+            <h2 class="overlay-title" id="overlayTitle">GAME OVER</h2>
+            <div class="stats-box">
+                <div class="stat-row">
+                    <span>關卡挑戰度：</span>
+                    <span id="finalStageReach">第 1/5 關</span>
+                </div>
+                <div class="stat-row">
+                    <span>累計答對題數：</span>
+                    <span id="finalCorrectCount" style="color: var(--neon-green); font-weight:bold;">0 題</span>
+                </div>
+                <div class="stat-row">
+                    <span>所用藥水瓶數：</span>
+                    <span id="finalPotionsUsed">0 瓶</span>
+                </div>
+                <div class="stat-row">
+                    <span>剩餘金幣：</span>
+                    <span id="finalCoins" style="color: var(--neon-yellow); font-weight:bold;">💰 0</span>
+                </div>
+            </div>
+            <button class="action-btn" id="overlayActionBtn" style="margin-top: 1rem;">重新挑戰</button>
+        </div>
+
+    </div>
+
+    <script>
+        // 內建題庫備份 (萬一 Google Sheets fetch 失敗時觸發)
+        const FALLBACK_QUESTIONS = [
+            { question: "下列哪一個是「瑞士」的正確英文名稱？", correct: "Switzerland", incorrect: ["Sweden", "Swaziland", "Scotland"] },
+            { question: "英文名稱 「Austria」 指的是哪一個國家？", correct: "奧地利", incorrect: ["澳洲", "澳門", "阿曼"] },
+            { question: "下列哪一個是「紐西蘭」的正確英文名稱？", correct: "New Zealand", incorrect: ["New Ireland", "Netherlands", "Greenland"] },
+            { question: "英文名稱 「Iceland」 指的是哪一個國家？", correct: "冰島", incorrect: ["愛爾蘭", "芬蘭", "格陵蘭"] },
+            { question: "下列哪一個是「泰國」的正確英文名稱？", correct: "Thailand", incorrect: ["Taiwan", "Tunisia", "Tanzania"] },
+            { question: "英文名稱 「Morocco」 指的是哪一個國家？", correct: "摩洛哥", incorrect: ["摩納哥", "墨西哥", "模里西斯"] },
+            { question: "下列哪一個是「葡萄牙」的正確英文名稱？", correct: "Portugal", incorrect: ["Poland", "Paraguay", "Peru"] },
+            { question: "英文名稱 「Egypt」 指的是哪一個國家？", correct: "埃及", incorrect: ["衣索比亞", "希臘", "厄瓜多"] },
+            { question: "下列哪一個是「比利時」的正確英文名稱？", correct: "Belgium", incorrect: ["Brazil", "Bulgaria", "Belarus"] },
+            { question: "英文名稱 「Turkey」 指的是哪一個國家？", correct: "土耳其", incorrect: ["突尼西亞", "土庫曼", "托克勞"] },
+            { question: "下列哪一個是「瑞典」的正確英文名稱？", correct: "Sweden", incorrect: ["Switzerland", "Sudan", "Spain"] },
+            { question: "英文名稱 「Australia」 指的是哪一個國家？", correct: "澳洲", incorrect: ["奧地利", "澳門", "阿根廷"] },
+            { question: "下列哪一個是「西班牙」的正確英文名稱？", correct: "Spain", incorrect: ["Singapore", "Slovakia", "Somalia"] },
+            { question: "英文名稱 「Germany」 指的是哪一個國家？", correct: "德國", incorrect: ["喬治亞", "希臘", "匈牙利"] },
+            { question: "下列哪一個是「加拿大」的正確英文名稱？", correct: "Canada", incorrect: ["Cambodia", "Cameroon", "Cuba"] },
+            { question: "英文名稱 「Finland」 指的是哪一個國家？", correct: "芬蘭", incorrect: ["評判", "斐濟", "法國"] },
+            { question: "下列哪一個是「墨西哥」的正確英文名稱？", correct: "Mexico", incorrect: ["Morocco", "Monaco", "Madagascar"] },
+            { question: "英文名稱 「Argentina」 指的是哪一個國家？", correct: "阿根廷", incorrect: ["阿爾及利亞", "亞美尼亞", "阿曼"] },
+            { question: "下列哪一個是「巴西」的正確英文名稱？", correct: "Brazil", incorrect: ["Brunei", "Bulgaria", "Bolivia"] },
+            { question: "英文名稱 「Greece」 指的是哪一個國家？", correct: "希臘", incorrect: ["格陵蘭", "瓜地馬拉", "幾內亞"] },
+            { question: "下列哪一個是「荷蘭」的常用英文名稱？", correct: "Netherlands", incorrect: ["Netherworld", "Norway", "Nigeria"] },
+            { question: "英文名稱 「Norway」 指的是哪哪一個國家？", correct: "挪威", incorrect: ["尼泊爾", "尼加拉瓜", "紐埃"] },
+            { question: "下列哪一個是「菲律賓」的正確英文名稱？", correct: "Philippines", incorrect: ["Poland", "Peru", "Palestine"] },
+            { question: "英文名稱 「Ireland」 指的是哪一個國家？", correct: "愛爾蘭", incorrect: ["冰島", "以色列", "伊朗"] },
+            { question: "下列哪一個是「波蘭」的正確英文名稱？", correct: "Poland", incorrect: ["Portugal", "Paraguay", "Panama"] },
+            { question: "英文名稱 「Singapore」 指的是哪一個國家？", correct: "新加坡", incorrect: ["斯里蘭卡", "塞內加爾", "塞席爾"] },
+            { question: "下列哪一個是「義大利」的正確英文名稱？", correct: "Italy", incorrect: ["India", "Indonesia", "Iran"] },
+            { question: "英文名稱 「Vietnam」 指的是哪一個國家？", correct: "越南", incorrect: ["委內瑞拉", "梵蒂岡", "萬那杜"] },
+            { question: "下列哪一個是「馬來西亞」的正確英文名稱？", correct: "Malaysia", incorrect: ["Maldives", "Malta", "Madagascar"] },
+            { question: "英文名稱 「Denmark」 指的是哪一個國家？", correct: "丹麥", incorrect: ["多明尼加", "吉布地", "多米尼克"] },
+            { question: "下列哪一個是「烏克蘭」的正確英文名稱？", correct: "Ukraine", incorrect: ["Uruguay", "Uganda", "Uzbekistan"] },
+            { question: "英文名稱 「Colombia」 指的是哪一個國家？", correct: "哥倫比亞", incorrect: ["柬埔寨", "喀麥隆", "剛果"] },
+            { question: "下列哪一個是「祕魯」的正確英文名稱？", correct: "Peru", incorrect: ["Panama", "Paraguay", "Pakistan"] },
+            { question: "英文名稱 「Chile」 指的是哪一個國家？", correct: "智利", incorrect: ["中國", "查德", "古巴"] },
+            { question: "下列哪一個是「古巴」的正確英文名稱？", correct: "Cuba", incorrect: ["Cyprus", "Croatia", "Costa Rica"] },
+            { question: "英文名稱 「Croatia」 指的是哪一個國家？", correct: "克羅埃西亞", incorrect: ["捷克", "哥斯大黎加", "賽普勒斯"] },
+            { question: "下列哪一個是「捷克」的正確英文名稱？", correct: "Czechia", incorrect: ["Chile", "Cyprus", "Chad"] },
+            { question: "英文名稱 「Hungary」 指的是哪一個國家？", correct: "匈牙利", incorrect: ["宏都拉斯", "海地", "荷蘭"] },
+            { question: "下列哪一個是「南非」的正確英文名稱？", correct: "South Africa", incorrect: ["Saudi Arabia", "South Korea", "Sudan"] },
+            { question: "英文名稱 「Saudi Arabia」 指的是哪一個國家？", correct: "沙烏地阿拉伯", incorrect: ["南非", "阿拉伯聯合大公國", "敘利亞"] },
+            { question: "下列哪一個是「斯洛伐克」的正確英文名稱？", correct: "Slovakia", incorrect: ["Slovenia", "Somalia", "Solomon Islands"] },
+            { question: "英文名稱 「Slovenia」 指的是哪一個國家？", correct: "斯洛維尼亞", incorrect: ["斯洛伐克", "索馬利亞", "索羅門群島"] },
+            { question: "下列哪一個是「多明尼加」的正確英文名稱？", correct: "Dominican Republic", incorrect: ["Dominica", "Denmark", "Djibouti"] },
+            { question: "英文名稱 「Dominica」 指的是哪一個國家？", correct: "多米尼克", incorrect: ["多明尼加", "丹麥", "東帝汶"] },
+            { question: "下列哪一個是「尼泊爾」的正確英文名稱？", correct: "Nepal", incorrect: ["Norway", "Netherlands", "Niger"] },
+            { question: "英文名稱 「Monaco」 指的是哪一個國家？", correct: "摩納哥", incorrect: ["摩洛哥", "墨西哥", "蒙古"] },
+            { question: "下列哪一個是「印度」的正確英文名稱？", correct: "India", incorrect: ["Indonesia", "Iran", "Iraq"] },
+            { question: "英文名稱 「Indonesia」 指的是哪一個國家？", correct: "印度尼西亞（印尼）", incorrect: ["印度", "伊朗", "愛爾蘭"] },
+            { question: "下列哪一個是「柬埔寨」的正確英文名稱？", correct: "Cambodia", incorrect: ["Cameroon", "Canada", "Colombia"] },
+            { question: "英文名稱 「Uruguay」 指的是哪一個國家？", correct: "烏拉圭", incorrect: ["烏克蘭", "烏干達", "烏茲別克"] }
+        ];
+
+        // 關卡怪物設定
+        const MONSTERS = [
+            { name: "野狼", avatar: "🐺", hp: 100 },
+            { name: "毒蠍", avatar: "🦂", hp: 100 },
+            { name: "惡鬼", avatar: "👹", hp: 100 },
+            { name: "巨龍", avatar: "🐲", hp: 100 },
+            { name: "魔王", avatar: "👑", hp: 100 }
+        ];
+
+        // 音效控制 (Web Audio API)
+        let audioCtx;
+        function initAudio() {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {
+                console.warn("音訊系統初始化暫緩 (等待使用者手勢互動):", e);
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            switch (type) {
+                case 'click':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.05);
+                    break;
+                case 'attack':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.15);
+                    break;
+                case 'crit':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.25);
+                    break;
+                case 'hurt':
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(330, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.25);
+                    break;
+                case 'heal':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.25);
+                    break;
+                case 'coin':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(987.77, now);
+                    osc.frequency.setValueAtTime(1318.51, now + 0.08);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(now + 0.2);
+                    break;
+                case 'gameover':
+                    const sadNotes = [329.63, 293.66, 261.63, 220]; // E4, D4, C4, A3
+                    sadNotes.forEach((freq, idx) => {
+                        const sOsc = audioCtx.createOscillator();
+                        const sGain = audioCtx.createGain();
+                        sOsc.type = 'triangle';
+                        sOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        sGain.gain.setValueAtTime(0.1, now + idx * 0.12);
+                        sGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.2);
+                        sOsc.connect(sGain);
+                        sGain.connect(audioCtx.destination);
+                        sOsc.start();
+                        sOsc.stop(now + idx * 0.12 + 0.2);
+                    });
+                    break;
+                case 'victory':
+                    const fanNotes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    fanNotes.forEach((freq, idx) => {
+                        const vOsc = audioCtx.createOscillator();
+                        const vGain = audioCtx.createGain();
+                        vOsc.type = 'sine';
+                        vOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        vGain.gain.setValueAtTime(0.08, now + idx * 0.08);
+                        vGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                        vOsc.connect(vGain);
+                        vGain.connect(audioCtx.destination);
+                        vOsc.start();
+                        vOsc.stop(now + idx * 0.08 + 0.3);
+                    });
+                    break;
+            }
+        }
+
+        // 遊戲核心變數
+        let questions = [];
+        let playerHP = 100;
+        let monsterHP = 100;
+        let currentStage = 1; // 1-5 關
+        let coins = 0;
+        
+        // 道具擁有量
+        let potionsCount = 0;
+        let attackCrystalActive = false;
+        let talismanCount = 0;
+
+        // 統計計數器
+        let totalCorrect = 0;
+        let potionsUsed = 0;
+
+        let currentQuestion = null;
+
+        // DOM 元素
+        const loadingScreen = document.getElementById('loadingScreen');
+        const coinCounter = document.getElementById('coinCounter');
+        const stageTitle = document.getElementById('stageTitle');
+        
+        const playerHPBar = document.getElementById('playerHPBar');
+        const playerHPText = document.getElementById('playerHPText');
+        const monsterHPBar = document.getElementById('monsterHPBar');
+        const monsterHPText = document.getElementById('monsterHPText');
+        const monsterAvatar = document.getElementById('monsterAvatar');
+        const monsterName = document.getElementById('monsterName');
+        const battleArena = document.getElementById('battleArena');
+        
+        const questionBox = document.getElementById('questionBox');
+        const optionsGrid = document.getElementById('optionsGrid');
+        const answerReveal = document.getElementById('answerReveal');
+        
+        const openBagBtn = document.getElementById('openBagBtn');
+        const closeBagBtn = document.getElementById('closeBagBtn');
+        const inventoryDrawer = document.getElementById('inventoryDrawer');
+        const usePotionBtn = document.getElementById('usePotionBtn');
+        const bagPotionCount = document.getElementById('bagPotionCount');
+        const bagTalismanCount = document.getElementById('bagTalismanCount');
+        const crystalStatus = document.getElementById('crystalStatus');
+        
+        const shopOverlay = document.getElementById('shopOverlay');
+        const shopCoins = document.getElementById('shopCoins');
+        const leaveShopBtn = document.getElementById('leaveShopBtn');
+        
+        const statusOverlay = document.getElementById('statusOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const finalStageReach = document.getElementById('finalStageReach');
+        const finalCorrectCount = document.getElementById('finalCorrectCount');
+        const finalPotionsUsed = document.getElementById('finalPotionsUsed');
+        const finalCoins = document.getElementById('finalCoins');
+        const overlayActionBtn = document.getElementById('overlayActionBtn');
+
+        // CSV 解析方法
+        function parseCSV(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            const parsed = [];
+            for (let i = 1; i < lines.length; i++) {
+                const row = parseCSVRow(lines[i]);
+                if (row.length >= 2) {
+                    const question = row[0];
+                    const correct = row[1];
+                    // 過濾空白與 "空" 的干擾項
+                    const incorrect = row.slice(2).filter(opt => opt && opt !== '空' && opt !== '');
+                    parsed.push({ question, correct, incorrect });
+                }
+            }
+            return parsed;
+        }
+
+        function parseCSVRow(line) {
+            const result = [];
+            let insideQuote = false;
+            let entry = '';
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"' || char === "'") {
+                    insideQuote = !insideQuote;
+                } else if (char === ',' && !insideQuote) {
+                    result.push(entry.trim());
+                    entry = '';
+                } else {
+                    entry += char;
+                }
+            }
+            result.push(entry.trim());
+            return result;
+        }
+
+        // 非同步讀取 Google Sheets CSV
+        async function fetchQuestions() {
+            const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTCDgnfYOLqPynTqd-MbUTef0jJblUYaaPuYGAp_yYDf_7bd1X5t5yFbiDjwVioTC9X0JS8Ia4edYlY/pub?output=csv";
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("網路請求失敗");
+                const text = await response.text();
+                questions = parseCSV(text);
+                if (questions.length === 0) throw new Error("CSV 沒有解析到題目");
+                console.log("網路題庫載入成功，題數：", questions.length);
+                // 雲端載入成功時，在底列標註
+                if(!document.getElementById('sourceBadge')) {
+                    openBagBtn.insertAdjacentHTML('afterend', '<span id="sourceBadge" style="font-size:0.7rem; color:#39ff14; margin-left:10px; font-weight:bold;">題庫:雲端</span>');
+                }
+            } catch (err) {
+                console.warn("載入雲端題庫失敗，使用內建備用題庫作為 Fallback。錯誤資訊：", err);
+                questions = [...FALLBACK_QUESTIONS];
+                // 備用載入成功時，在底列標註
+                if(!document.getElementById('sourceBadge')) {
+                    openBagBtn.insertAdjacentHTML('afterend', '<span id="sourceBadge" style="font-size:0.7rem; color:#ffea00; margin-left:10px; font-weight:bold;">題庫:備用</span>');
+                }
+            } finally {
+                // 延遲關閉 loading 畫面以獲得更好的動態觀感
+                setTimeout(() => {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => loadingScreen.style.display = 'none', 500);
+                    startGame();
+                }, 800);
+            }
+        }
+
+        // 打亂隨機輔助
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // 開始遊戲
+        function startGame() {
+            playerHP = 100;
+            coins = 0;
+            potionsCount = 0;
+            talismanCount = 0;
+            attackCrystalActive = false;
+            currentStage = 1;
+            
+            totalCorrect = 0;
+            potionsUsed = 0;
+
+            statusOverlay.style.display = 'none';
+            shopOverlay.style.display = 'none';
+            inventoryDrawer.classList.remove('active');
+
+            updatePlayerHPDisplay();
+            updateCoinsDisplay();
+            updateBagDisplay();
+
+            loadStage();
+        }
+
+        // 載入關卡
+        function loadStage() {
+            const monsterData = MONSTERS[currentStage - 1];
+            monsterHP = monsterData.hp;
+            monsterAvatar.textContent = monsterData.avatar;
+            monsterName.textContent = monsterData.name;
+            stageTitle.textContent = `STAGE ${currentStage}/5`;
+            
+            updateMonsterHPDisplay();
+            nextQuestion();
+        }
+
+        // 出題
+        function nextQuestion() {
+            answerReveal.style.display = 'none';
+            optionsGrid.style.pointerEvents = 'auto';
+
+            if (questions.length === 0) {
+                // 題庫空了重新複製備用題庫
+                questions = [...FALLBACK_QUESTIONS];
+            }
+
+            // 隨機抽一題
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            currentQuestion = questions[randomIndex];
+
+            questionBox.textContent = currentQuestion.question;
+
+            // 隨機打亂正解與錯誤項
+            const allOptions = shuffle([currentQuestion.correct, ...currentQuestion.incorrect]);
+            
+            // 渲染選項按鈕
+            optionsGrid.innerHTML = '';
+            allOptions.forEach((option, idx) => {
+                const button = document.createElement('button');
+                button.className = 'opt-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => {
+                    handleAnswer(option, button);
+                });
+                optionsGrid.appendChild(button);
+            });
+        }
+
+        // 答題判定
+        function handleAnswer(selectedOption, buttonElement) {
+            initAudio();
+            optionsGrid.style.pointerEvents = 'none'; // 鎖定點擊
+
+            if (selectedOption === currentQuestion.correct) {
+                // 答對了！
+                totalCorrect++;
+                let damage = 25;
+                
+                if (attackCrystalActive) {
+                    damage = 50;
+                    attackCrystalActive = false;
+                    crystalStatus.textContent = "無";
+                    crystalStatus.style.color = "#64748b";
+                    
+                    // 暴擊特效
+                    playSound('crit');
+                    const critPop = document.getElementById('critPopText');
+                    critPop.style.display = 'block';
+                    battleArena.classList.add('critical-flash');
+                    setTimeout(() => {
+                        critPop.style.display = 'none';
+                        battleArena.classList.remove('critical-flash');
+                    }, 800);
+                } else {
+                    playSound('attack');
+                    battleArena.classList.add('correct-flash');
+                    setTimeout(() => battleArena.classList.remove('correct-flash'), 200);
+                }
+
+                // 怪物扣血
+                monsterHP = Math.max(0, monsterHP - damage);
+                updateMonsterHPDisplay();
+
+                // 賺取金幣
+                addCoins(5);
+
+                // 檢查怪物是否死亡
+                if (monsterHP <= 0) {
+                    setTimeout(handleMonsterDefeat, 600);
+                } else {
+                    setTimeout(nextQuestion, 800);
+                }
+            } else {
+                // 答錯了！
+                playSound('hurt');
+                battleArena.classList.add('shake');
+                setTimeout(() => battleArena.classList.remove('shake'), 300);
+
+                // 玩家扣血
+                playerHP = Math.max(0, playerHP - 25);
+                updatePlayerHPDisplay();
+
+                // 紅字顯示正確答案
+                answerReveal.textContent = `❌ 答錯了！正確答案是：【${currentQuestion.correct}】`;
+                answerReveal.style.display = 'block';
+
+                // 檢查玩家是否死亡
+                if (playerHP <= 0) {
+                    setTimeout(handlePlayerDeath, 1800);
+                } else {
+                    setTimeout(nextQuestion, 2000);
+                }
+            }
+        }
+
+        // 擊倒怪物
+        function handleMonsterDefeat() {
+            // 隨機獲得20-50金幣
+            const loot = Math.floor(Math.random() * 31) + 20;
+            addCoins(loot);
+            
+            // 跳出對話框提示
+            alert(`🎉 成功擊敗了 ${MONSTERS[currentStage - 1].name}！\n獲得額外金幣：💰 ${loot}`);
+
+            if (currentStage === 5) {
+                // 全部通關！
+                triggerVictory();
+            } else {
+                // 進入商店
+                openShop();
+            }
+        }
+
+        // 玩家血量耗盡判定
+        function handlePlayerDeath() {
+            if (talismanCount > 0) {
+                // 有救命符
+                talismanCount--;
+                playerHP = 1;
+                updatePlayerHPDisplay();
+                updateBagDisplay();
+                alert("🛡️ 救命符發揮神秘力量！免除死亡並將 HP 復活為 1 點！");
+                nextQuestion();
+            } else {
+                // 沒有救命符，判定當前 HP 是否已是 1
+                if (playerHP === 1 || playerHP <= 0) {
+                    // 如果已經是 1 HP 再次死亡，或者無符直接死在 0HP
+                    // 檢查是不是真的死亡 (因為 HP=1 重新挑戰本關的邏輯，如果從1扣血直接扣到0，判定重來該關)
+                    if (playerHP <= 0) {
+                        // 扣血直接至0 判定重來該關，HP設成1
+                        playerHP = 1;
+                        monsterHP = 100;
+                        updatePlayerHPDisplay();
+                        updateMonsterHPDisplay();
+                        alert(`💀 你被擊倒了！重新挑戰第 ${currentStage} 關，HP 設為 1 點作為懲罰！`);
+                        nextQuestion();
+                    } else {
+                        // 如果 HP=1 且沒有救命符又答錯死掉 -> Game Over
+                        triggerGameOver();
+                    }
+                }
+            }
+        }
+
+        // 金幣增減
+        function addCoins(amount) {
+            coins += amount;
+            playSound('coin');
+            updateCoinsDisplay();
+        }
+
+        // 金幣與血量更新 UI 顯示
+        function updateCoinsDisplay() {
+            coinCounter.textContent = `💰 ${coins}`;
+            coinCounter.classList.add('pop');
+            setTimeout(() => coinCounter.classList.remove('pop'), 150);
+        }
+
+        function updatePlayerHPDisplay() {
+            playerHPBar.style.width = playerHP + '%';
+            playerHPText.textContent = `${playerHP}/100`;
+
+            // 血條顏色變化
+            playerHPBar.className = 'hp-bar-inner';
+            if (playerHP < 20) {
+                playerHPBar.classList.add('hp-red');
+            } else if (playerHP < 50) {
+                playerHPBar.classList.add('hp-yellow');
+            }
+        }
+
+        function updateMonsterHPDisplay() {
+            monsterHPBar.style.width = monsterHP + '%';
+            monsterHPText.textContent = `${monsterHP}/100`;
+
+            monsterHPBar.className = 'hp-bar-inner';
+            if (monsterHP < 20) {
+                monsterHPBar.classList.add('hp-red');
+            } else if (monsterHP < 50) {
+                monsterHPBar.classList.add('hp-yellow');
+            }
+        }
+
+        // 更新背包數據顯示
+        function updateBagDisplay() {
+            bagPotionCount.textContent = potionsCount;
+            bagTalismanCount.textContent = talismanCount;
+            
+            // 紅藥水按鈕是否可用
+            if (potionsCount > 0 && playerHP < 100 && playerHP > 0) {
+                usePotionBtn.disabled = false;
+            } else {
+                usePotionBtn.disabled = true;
+            }
+        }
+
+        // 背包開關事件
+        openBagBtn.addEventListener('click', () => {
+            playSound('click');
+            updateBagDisplay();
+            inventoryDrawer.classList.add('active');
+        });
+
+        closeBagBtn.addEventListener('click', () => {
+            playSound('click');
+            inventoryDrawer.classList.remove('active');
+        });
+
+        // 服用藥水
+        usePotionBtn.addEventListener('click', () => {
+            if (potionsCount <= 0 || playerHP >= 100) return;
+            initAudio();
+            potionsCount--;
+            potionsUsed++;
+            playerHP = Math.min(100, playerHP + 50);
+            
+            playSound('heal');
+            updatePlayerHPDisplay();
+            updateBagDisplay();
+            alert("🧪 服用紅藥水！回復了 50 點生命值！");
+        });
+
+        // 🏬 商店開關 logic
+        function openShop() {
+            shopCoins.textContent = `💰 ${coins}`;
+            
+            // 比對金幣決定按鈕使能
+            updateShopButtons();
+
+            shopOverlay.style.display = 'flex';
+        }
+
+        function updateShopButtons() {
+            const buyPotionBtn = document.getElementById('buy-potion');
+            const buyCrystalBtn = document.getElementById('buy-crystal');
+            const buyTalismanBtn = document.getElementById('buy-talisman');
+
+            buyPotionBtn.disabled = coins < 30;
+            buyCrystalBtn.disabled = coins < 40 || attackCrystalActive; // 攻擊水晶只能持有一個
+            buyTalismanBtn.disabled = coins < 80;
+        }
+
+        // 購買道具點擊事件
+        document.getElementById('buy-potion').addEventListener('click', () => {
+            if (coins >= 30) {
+                coins -= 30;
+                potionsCount++;
+                playSound('coin');
+                shopCoins.textContent = `💰 ${coins}`;
+                updateCoinsDisplay();
+                updateShopButtons();
+                updateBagDisplay();
+            }
+        });
+
+        document.getElementById('buy-crystal').addEventListener('click', () => {
+            if (coins >= 40 && !attackCrystalActive) {
+                coins -= 40;
+                attackCrystalActive = true;
+                crystalStatus.textContent = "啟用";
+                crystalStatus.style.color = "var(--neon-pink)";
+                playSound('coin');
+                shopCoins.textContent = `💰 ${coins}`;
+                updateCoinsDisplay();
+                updateShopButtons();
+                updateBagDisplay();
+            }
+        });
+
+        document.getElementById('buy-talisman').addEventListener('click', () => {
+            if (coins >= 80) {
+                coins -= 80;
+                talismanCount++;
+                playSound('coin');
+                shopCoins.textContent = `💰 ${coins}`;
+                updateCoinsDisplay();
+                updateShopButtons();
+                updateBagDisplay();
+            }
+        });
+
+        // 離開商店
+        leaveShopBtn.addEventListener('click', () => {
+            playSound('click');
+            shopOverlay.style.display = 'none';
+            currentStage++;
+            loadStage();
+        });
+
+        // 通關大獲全勝
+        function triggerVictory() {
+            playSound('victory');
+            localStorage.setItem('cert_warrior', 'true');
+            statusOverlay.className = "status-overlay victory";
+            overlayTitle.textContent = "VICTORY!";
+            
+            finalStageReach.textContent = "全數通關 (5/5 關)";
+            finalCorrectCount.textContent = `${totalCorrect} 題`;
+            finalPotionsUsed.textContent = `${potionsUsed} 瓶`;
+            finalCoins.textContent = `💰 ${coins}`;
+            
+            overlayActionBtn.textContent = "重新挑戰";
+            statusOverlay.style.display = 'flex';
+        }
+
+        // Game Over
+        function triggerGameOver() {
+            playSound('gameover');
+            statusOverlay.className = "status-overlay gameover";
+            overlayTitle.textContent = "GAME OVER";
+            
+            finalStageReach.textContent = `第 ${currentStage}/5 關`;
+            finalCorrectCount.textContent = `${totalCorrect} 題`;
+            finalPotionsUsed.textContent = `${potionsUsed} 瓶`;
+            finalCoins.textContent = `💰 ${coins}`;
+            
+            overlayActionBtn.textContent = "重新開始";
+            statusOverlay.style.display = 'flex';
+        }
+
+        overlayActionBtn.addEventListener('click', () => {
+            startGame();
+        });
+
+        // 啟動加載
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchQuestions();
+        });
+    </script>
+</body>
+</html>

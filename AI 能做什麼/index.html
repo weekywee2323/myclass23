@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 助手 & Antigravity - 老師的教學超能力</title>
+    <meta name="description" content="探索 AI 助手與 Antigravity 如何協同運作，為教師帶來更高效的課堂經營、教材製作、親師溝通與出卷功能。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-deep: #111827;
+            --bg-card: rgba(22, 28, 45, 0.7);
+            --bg-card-hover: rgba(30, 41, 59, 0.8);
+            --primary: #f97316; /* 溫暖的日落橘 */
+            --primary-gradient: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+            --accent: #f59e0b; /* 琥珀金 */
+            --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(249, 115, 22, 0.4);
+            --glow: 0 0 20px rgba(249, 115, 22, 0.15);
+            --font-outfit: 'Outfit', 'Noto Sans TC', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-outfit);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(249, 115, 22, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* 導覽列 */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo span {
+            font-size: 0.85rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 99px;
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            -webkit-text-fill-color: var(--primary);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-menu a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-menu a:hover, .nav-menu a.active {
+            color: var(--text-main);
+        }
+
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+            transition: width 0.3s ease;
+        }
+
+        .nav-menu a:hover::after, .nav-menu a.active::after {
+            width: 100%;
+        }
+
+        /* 英雄區塊 */
+        .hero {
+            padding: 9rem 2rem 5rem;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+            padding: 0.5rem 1.2rem;
+            border-radius: 99px;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 30%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        /* 內容區段 */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 60%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* 第一部分：我是誰與能力結合 */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--glow);
+            transition: all 0.3s ease;
+        }
+
+        .about-card:hover {
+            border-color: var(--border-active);
+            transform: translateY(-4px);
+        }
+
+        .about-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .about-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .about-card h3 svg {
+            color: var(--primary);
+        }
+
+        .about-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-top: 1.5rem;
+        }
+
+        .tech-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.4rem 1rem;
+            border-radius: 99px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* 結合優勢圖解 */
+        .combo-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .combo-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .combo-step:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(245, 158, 11, 0.3);
+            transform: translateX(5px);
+        }
+
+        .step-icon {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary);
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            flex-shrink: 0;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+
+        .step-info h4 {
+            font-size: 1.15rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-main);
+        }
+
+        .step-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* 第二部分：教學應用場景 */
+        .scene-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2.5rem;
+        }
+
+        .scene-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .scene-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+            color: var(--text-muted);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .scene-btn svg {
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .scene-btn:hover {
+            border-color: rgba(249, 115, 22, 0.3);
+            color: var(--text-main);
+            background: rgba(30, 41, 59, 0.4);
+        }
+
+        .scene-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .scene-btn.active svg {
+            transform: scale(1.1);
+        }
+
+        .scene-display {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: var(--glow);
+        }
+
+        .scene-header-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .scene-title-active {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .scene-tag {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-weight: 600;
+        }
+
+        .scene-content {
+            flex-grow: 1;
+        }
+
+        .prompt-box {
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .prompt-box::before {
+            content: '教師指令範例';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #1e293b;
+            color: var(--accent);
+            font-size: 0.75rem;
+            padding: 0 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .prompt-text {
+            font-family: monospace;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+        }
+
+        .result-box {
+            background: rgba(15, 23, 42, 0.4);
+            border-left: 4px solid var(--primary);
+            padding: 1.2rem;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .result-title {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* 第三部分：插件推薦 */
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .plugin-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plugin-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--border-active);
+            box-shadow: var(--glow);
+        }
+
+        .plugin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .plugin-info-top h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .plugin-author {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .plugin-badge {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-weight: 600;
+        }
+
+        .plugin-badge.must-have {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .plugin-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+
+        .plugin-why {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .plugin-why h4 {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .plugin-why p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* 第四部分：對話指引 Do & Don't */
+        .guide-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+        }
+
+        .guide-col {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .guide-col.do {
+            border-top: 4px solid #10b981; /* 綠色 */
+        }
+
+        .guide-col.dont {
+            border-top: 4px solid #ef4444; /* 紅色 */
+        }
+
+        .guide-col h3 {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .guide-col.do h3 { color: #10b981; }
+        .guide-col.dont h3 { color: #ef4444; }
+
+        .guide-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            list-style: none;
+        }
+
+        .guide-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .guide-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .guide-col.do .guide-num {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .guide-col.dont .guide-num {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .guide-text h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-main);
+        }
+
+        .guide-text p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* 結尾呼籲區 */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            max-width: 1000px;
+            margin: 4rem auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--glow);
+        }
+
+        .cta-section h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cta-section p {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 頁尾 */
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: rgba(11, 15, 25, 0.5);
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--accent);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 968px) {
+            .about-grid, .scene-container, .guide-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .scene-container {
+                gap: 1.5rem;
+            }
+
+            .hero h1 {
+                font-size: 2.6rem;
+            }
+            
+            .nav-menu {
+                display: none; /* 可在實作漢堡選單時擴充 */
+            }
+        }
+
+        /* 微小動畫 */
+        @keyframes hoverGlow {
+            0% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
+            50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+            100% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.1); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 導覽列 -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                Antigravity <span>AI 智慧助教</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#about" class="active" id="nav-about">自我介紹</a></li>
+                <li><a href="#scenarios" id="nav-scenarios">教學應用</a></li>
+                <li><a href="#extensions" id="nav-extensions">必備擴充</a></li>
+                <li><a href="#guide" id="nav-guide">對話技巧</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- 英雄區塊 -->
+    <section class="hero">
+        <div class="hero-badge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            雙效合一：AI 模型 + 智慧代理環境
+        </div>
+        <h1>解放繁瑣庶務<br>開啟教師的「智慧代理」時代</h1>
+        <p>我是您的 AI 程式與教學助理，結合了強大的 Antigravity IDE 執行環境，我們不只能給您文字建議，更能直接為您產出文件、撰寫遊戲、操作檔案，成為您最得力的教學後盾。</p>
+        <div class="hero-buttons">
+            <a href="#scenarios" class="btn btn-primary">看教學實例</a>
+            <a href="#guide" class="btn btn-secondary">學對話技巧</a>
+        </div>
+    </section>
+
+    <!-- 第一部分：我是誰與能力結合 -->
+    <section id="about" class="section">
+        <div class="section-header">
+            <h2>你是誰？結合 Antigravity 能做什麼？</h2>
+            <p>了解 AI 思考力與 IDE 執行工具的完美結合，如何轉化為您的實作生產力。</p>
+        </div>
+        <div class="about-grid">
+            <div class="about-card">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    我們的組合身份
+                </h3>
+                <p><strong>我是您的 AI 智慧助理：</strong>由先進的大語言模型（如 Claude / Gemini）驅動，具備強大的教學文本生成、邏輯推理與程式碼編寫能力。</p>
+                <p><strong>結合 Antigravity 代理平台：</strong>這是一套超越傳統對話框的智慧編輯環境。我不僅僅是「回答」您的問題，我還能直接操作電腦檔案、自動排版網頁、安裝插件，甚至執行本地伺服器讓您即時預覽教學成果。</p>
+                <div class="badge-list">
+                    <span class="tech-badge">實時檔案讀寫</span>
+                    <span class="tech-badge">指令碼安全執行</span>
+                    <span class="tech-badge">網頁即時預覽</span>
+                    <span class="tech-badge">自動化工作流</span>
+                </div>
+            </div>
+
+            <div class="combo-visual">
+                <div class="combo-step">
+                    <div class="step-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M3 20v-8c0-2.2 1.8-4 4-4h10c2.2 0 4 1.8 4 4v8M3 12h18"/></svg>
+                    </div>
+                    <div class="step-info">
+                        <h4>1. 傳統 AI 的限制</h4>
+                        <p>一般的 ChatGPT 或網頁版 AI 只能給您程式碼，您必須自己複製、貼上、存檔，一旦格式出錯就無法運行。</p>
+                    </div>
+                </div>
+                <div class="combo-step">
+                    <div class="step-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <div class="step-info">
+                        <h4>2. Antigravity 賦能</h4>
+                        <p>我能直接在您的電腦桌面建立資料夾（如「我的小遊戲」），將網頁程式碼精準寫入 index.html，並在終端機自動幫您測試。</p>
+                    </div>
+                </div>
+                <div class="combo-step">
+                    <div class="step-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    </div>
+                    <div class="step-info">
+                        <h4>3. 最終教學成果</h4>
+                        <p>老師完全不需要安裝複雜的程式開發環境，只需用中文說出想法，我們就能完成所有後台設定，並直接打開瀏覽器呈現結果！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第二部分：教學應用場景 -->
+    <section id="scenarios" class="section">
+        <div class="section-header">
+            <h2>教師日常教學工作應用</h2>
+            <p>點擊左側的日常教學任務，查看 AI 如何為您撰寫指令（Prompt）並產出高品質的教學成果。</p>
+        </div>
+
+        <div class="scene-container">
+            <div class="scene-menu" id="scene-menu">
+                <!-- 由 JS 動態注入或保持靜態以提高載入速度 -->
+                <button class="scene-btn active" onclick="switchScene(0)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    出考卷與測驗
+                </button>
+                <button class="scene-btn" onclick="switchScene(1)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    班級經營工具
+                </button>
+                <button class="scene-btn" onclick="switchScene(2)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    親師溝通聯絡
+                </button>
+                <button class="scene-btn" onclick="switchScene(3)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    教材與教案製作
+                </button>
+                <button class="scene-btn" onclick="switchScene(4)">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>
+                    課堂互動小遊戲
+                </button>
+            </div>
+
+            <div class="scene-display" id="scene-display">
+                <div class="scene-header-inline">
+                    <div class="scene-title-active" id="active-scene-title">
+                        出考卷與隨堂測驗
+                    </div>
+                    <span class="scene-tag" id="active-scene-tag">行政與評量</span>
+                </div>
+                <div class="scene-content">
+                    <div class="prompt-box">
+                        <div class="prompt-text" id="active-prompt">
+                            載入中...
+                        </div>
+                    </div>
+                    <div class="result-box">
+                        <div class="result-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            AI 智慧助教輸出預覽
+                        </div>
+                        <div class="result-text" id="active-result">
+                            載入中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第三部分：插件推薦 -->
+    <section id="extensions" class="section">
+        <div class="section-header">
+            <h2>推薦老師最該裝的 Antigravity / VS Code 擴充功能</h2>
+            <p>精選 4 款能大幅提升老師網頁製作與教案排版效率的熱門套件。</p>
+        </div>
+        <div class="plugin-grid">
+            <!-- 插件 1 -->
+            <div class="plugin-card">
+                <div class="plugin-header">
+                    <div class="plugin-info-top">
+                        <h3>Live Server</h3>
+                        <div class="plugin-author">作者: Ritwick Dey</div>
+                    </div>
+                    <span class="plugin-badge must-have">必裝首選</span>
+                </div>
+                <p class="plugin-desc">為靜態網頁（HTML/CSS/JS）啟動一個本地開發伺服器，並提供瀏覽器即時熱重載（Live Reload）功能。</p>
+                <div class="plugin-why">
+                    <h4>為什麼推薦？</h4>
+                    <p>老師在修改小遊戲或教材網頁時，只要按下存檔，瀏覽器畫面就會立刻更新！不用每次手動重新整理網頁，排版、微調更直覺。</p>
+                </div>
+            </div>
+
+            <!-- 插件 2 -->
+            <div class="plugin-card">
+                <div class="plugin-header">
+                    <div class="plugin-info-top">
+                        <h3>Markdown All in One</h3>
+                        <div class="plugin-author">作者: Yu Zhang</div>
+                    </div>
+                    <span class="plugin-badge">效率提升</span>
+                </div>
+                <p class="plugin-desc">提供撰寫 Markdown 文件所需的一切快捷鍵、自動預覽、目錄生成與數學公式支援。</p>
+                <div class="plugin-why">
+                    <h4>為什麼推薦？</h4>
+                    <p>老師常用 Markdown 來草擬教案、大綱或學生的考卷草案。這款擴充功能讓排版像用 Word 一樣流暢，且渲染結果極美。</p>
+                </div>
+            </div>
+
+            <!-- 插件 3 -->
+            <div class="plugin-card">
+                <div class="plugin-header">
+                    <div class="plugin-info-top">
+                        <h3>Auto Rename Tag</h3>
+                        <div class="plugin-author">作者: Jun Han</div>
+                    </div>
+                    <span class="plugin-badge">防錯防呆</span>
+                </div>
+                <p class="plugin-desc">當您重新命名一個 HTML/XML 開啟標籤時，自動將配對的關閉標籤也一起重新命名。</p>
+                <div class="plugin-why">
+                    <h4>為什麼推薦？</h4>
+                    <p>網頁排版最常遇到的問題就是 HTML 標籤「前改後沒改」導致整個畫面碎裂。這個外掛能杜絕這個低級失誤，節省除錯時間。</p>
+                </div>
+            </div>
+
+            <!-- 插件 4 -->
+            <div class="plugin-card">
+                <div class="plugin-header">
+                    <div class="plugin-info-top">
+                        <h3>Prettier - Code Formatter</h3>
+                        <div class="plugin-author">作者: Prettier</div>
+                    </div>
+                    <span class="plugin-badge">排版美化</span>
+                </div>
+                <p class="plugin-desc">強大的程式碼格式化工具，支援 HTML、CSS、JavaScript，一鍵將亂糟糟的程式碼排得整整齊齊。</p>
+                <div class="plugin-why">
+                    <h4>為什麼推薦？</h4>
+                    <p>當老師想將程式碼投影到大螢幕給學生看，或者想讓程式碼更易讀時，Prettier 能一鍵對齊縮排，讓教學示範顯得極其專業。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第四部分：對話指引 Do & Don't -->
+    <section id="guide" class="section">
+        <div class="section-header">
+            <h2>如何跟 AI 說話以得到最好的回答？</h2>
+            <p>掌握以下 4 個 Do & Don't 原則，讓 AI 從「普通的問答機器人」升級成您專屬的「金牌助教」。</p>
+        </div>
+        <div class="guide-container">
+            <!-- Do -->
+            <div class="guide-col do">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    建議做的事 (Do's)
+                </h3>
+                <ul class="guide-list">
+                    <li class="guide-item">
+                        <div class="guide-num">1</div>
+                        <div class="guide-text">
+                            <h4>明確提供「學生年段」與「教學主題」</h4>
+                            <p>例如：「對象是國小三年級，請寫一封段考前鼓勵學生的信」而非只說「寫一封信」。年段不同，AI 選擇的詞彙與長度會有極大差異。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">2</div>
+                        <div class="guide-text">
+                            <h4>以「結構化欄位」規範輸出格式</h4>
+                            <p>例如：「出 5 題數學選擇題，必須包含題目、A/B/C/D 選項、正確答案、詳細解析四個部分，並用表格呈現。」這能確保您能直接複製使用。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">3</div>
+                        <div class="guide-text">
+                            <h4>採「漸進式開發」製作小遊戲</h4>
+                            <p>例如：「第一步：幫我寫一個只有一個紅色按鈕的 HTML 頁面」、「第二步：加入按鈕點擊後隨機出現成語的功能」。一次只做一件事，成功率達 99%。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">4</div>
+                        <div class="guide-text">
+                            <h4>直接丟入「錯誤訊息」讓我除錯</h4>
+                            <p>當您執行小遊戲時，若按鈕沒反應或瀏覽器報錯，不要驚慌。直接對我說：「我的按鈕按下去沒反應，請幫我檢查這段程式碼哪裡出錯」，我能一秒找出問題。</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Don't -->
+            <div class="guide-col dont">
+                <h3>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    避免做的事 (Don'ts)
+                </h3>
+                <ul class="guide-list">
+                    <li class="guide-item">
+                        <div class="guide-num">1</div>
+                        <div class="guide-text">
+                            <h4>避免使用空泛、無情境的指令</h4>
+                            <p>例如：「幫我出英文考卷」或「寫一個遊戲」。這會迫使 AI 盲目猜測您的意圖，通常會生成不符合您目前進度或太難/太簡單的內容。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">2</div>
+                        <div class="guide-text">
+                            <h4>不要在第一輪就塞入「所有繁複規則」</h4>
+                            <p>例如：「幫我做一個英文單字拼字遊戲，要能計分、有倒數計時、能存檔、還要能把成績用 Email 寄給家長...」這會讓 AI 在單次生成中迷失，導致程式碼殘缺。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">3</div>
+                        <div class="guide-text">
+                            <h4>不要重複提問「不相關的追問」</h4>
+                            <p>當 AI 給您的程式碼有部分功能不對，請針對該功能說「請修正 X 按鈕沒反應的問題」，不要重新輸入一次全新指令，這樣會洗掉之前的程式碼上下文。</p>
+                        </div>
+                    </li>
+                    <li class="guide-item">
+                        <div class="guide-num">4</div>
+                        <div class="guide-text">
+                            <h4>不要手動更改 AI 幫您寫好的核心結構</h4>
+                            <p>若對程式碼不熟悉，請避免自行在文字編輯器裡增刪大括號 <code>{}</code> 或標籤，這極易導致語法錯誤。應直接告訴 AI 您要修改的邏輯，由 AI 幫您產生安全代碼。</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 結尾呼籲區 -->
+    <section class="cta-section">
+        <h2>準備好發揮您的教學超能力了嗎？</h2>
+        <p>現在就在下方點擊展開您的第一個小遊戲專案，或試著向我發送第一個教學指令吧！</p>
+        <button class="btn btn-primary" onclick="alert('恭喜您踏出第一步！試著在 chat 視窗中對我說：『請幫我在剛剛建立的「我的小遊戲」資料夾下，做一個簡單的英文單字翻牌遊戲！』')">
+            立即開始對話
+        </button>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer>
+        <p>© 2026 Antigravity IDE × AI 智慧教學代理. All rights reserved.</p>
+        <p>由 <a href="#">Gemini / Claude</a> 與 <a href="#">Antigravity Agent</a> 聯手設計與實作。</p>
+    </footer>
+
+    <!-- 日常教學場景的 JS 資料庫 -->
+    <script>
+        const scenesData = [
+            {
+                title: "出考卷與隨堂測驗",
+                tag: "行政與評量",
+                prompt: `請針對「國小四年級自然科 - 水的三態變化」，出一份隨堂小測驗：\n1. 包含 3 題單選題與 2 題是非題。\n2. 格式需要有題目、選項、正確答案與詳細解析。\n3. 請用 Markdown 表格輸出，方便我直接複製到 Word 中。`,
+                result: `| 題號 | 題型 | 題目 | 選項/答案 | 正確答案 | 解析 |\n| :--- | :--- | :--- | :--- | :---: | :--- |\n| 1 | 單選 | 水在幾度時會開始結冰？ | (A) 100℃ (B) 50℃ (C) 0℃ (D) -10℃ | C | 水的冰點在標準大氣壓下是 0℃，此時水會由液態凝固成固態的冰。 |\n| 2 | 單選 | 燒開水時，壺口出現的「白煙」是什麼？ | (A) 水蒸氣 (B) 小水滴 (C) 煙霧 (D) 空氣 | B | 水蒸氣是無色無味的氣體，肉眼看不到。壺口白煙是水蒸氣遇冷凝結成的小水滴。 |\n| 3 | 是非 | 冰塊融化成水的過程中，體積會變大。 | (O) 正確 / (X) 錯誤 | X | 水結冰時體積會膨脹變大；相反地，冰融化成水時，體積會變小。 |`
+            },
+            {
+                title: "班級經營工具",
+                tag: "班級經營",
+                prompt: `請幫我用 HTML 與 CSS 寫一個簡單的網頁「班級值日生隨機抽選器」：\n1. 畫面有一個輸入框可以輸入全班姓名（以逗號隔開）。\n2. 有一個「開始抽選」按鈕，按下後會有姓名隨機跳動的動畫效果，3秒後抽出兩名值日生。\n3. 主題使用溫暖活潑的馬卡龍色系，並要能適應手機與平板的螢幕。`,
+                result: `[AI 已直接在您的專案資料夾中建立了 lottery.html 檔案！]\n內含：\n- 響應式 CSS 網格，完美適配平板。\n- JS Canvas 微小彩帶特效：點擊抽選成功時，會從螢幕兩側噴出彩色碎紙慶祝。\n- 記憶功能：自動將老師輸入的班級名單記錄在瀏覽器中，下次打開免重新輸入！`
+            },
+            {
+                title: "親師溝通聯絡",
+                tag: "家長聯絡",
+                prompt: `我需要寫一封親師聯絡信給小明的家長：\n1. 小明今天主動留下來協助受傷的同學去保健室，表現很貼心。\n2. 但最近數學小考成績有些下滑，常粗心寫錯題目。\n3. 語氣希望溫暖、正面，先肯定他的善意，再委婉提醒家長協助複習乘法表。`,
+                result: `小明爸爸/媽媽您好：\n\n今天想特別跟您分享小明在學校的暖心舉動！今天有同學在體育課不小心擦傷，小明第一時間主動陪同他去保健室，一路上非常細心照顧，連保健室阿姨都誇獎小明是個貼心又溫暖的孩子，真的很棒！\n\n另外，也跟您稍微說明一下小明最近的學習狀況。這兩週的數學單元是乘法運算，小明在觀念上都理解，不過在計算時偶爾會因為粗心而有些小失誤，導致成績稍微下滑。\n\n小明非常聰明，只要靜下心來細心檢查，一定沒問題的。這週再麻煩爸爸媽媽在家中協助他複習九九乘法表的熟練度。學校部分我也會多加留意並指導他。謝謝您對班級事務的配合與支持！\n\n祝 順心\n班導師 敬上`
+            },
+            {
+                title: "教材與教案製作",
+                tag: "課堂教學",
+                prompt: `請為國中歷史「三國鼎立與勢力分佈」設計一堂 45 分鐘的教學教案大綱：\n1. 包含引導動機（5分）、發展活動（30分）與綜合活動（10分）。\n2. 設計一個課堂互動任務，讓學生能分組討論。\n3. 提供老師可以提問引導的 3 個問題。`,
+                result: `### 「三國風雲：英雄的決策」教學教案\n\n- **教學目標**：理解赤壁之戰的歷史背景、三國形勢的形成，並培養歷史地圖的閱讀能力。\n- **引導動機 (5 mins)**：播放經典遊戲或影視《三國演義》的音樂，詢問學生最喜歡哪個三國人物？他們分別代表什麼勢力？帶入「魏、蜀、吳」三分天下的概念。\n- **發展活動 (30 mins)**：\n  - **形勢分析 (15 mins)**：配合地圖，講解曹操、劉備、孫權的地理優勢與劣勢。\n  - **小組模擬任務「赤壁決策」 (15 mins)**：學生分組扮演孫權的幕僚，討論「面對曹操百萬大軍，我們該降還是該戰？原因為何？」\n- **綜合活動 (10 mins)**：各組代表發表決策，老師總結赤壁之戰的實際結果與三國鼎立的確立。\n- **引導提問**：\n  1. 為什麼地理位置（長江險阻）對東吳的防守如此關鍵？\n  2. 如果您是當時的劉備，在沒有地盤的情況下，您會選擇與誰結盟？為什麼？`
+            },
+            {
+                title: "課堂互動小遊戲",
+                tag: "趣味學習",
+                prompt: `請寫一個 HTML/CSS/JS 的「成語接龍大挑戰」小遊戲：\n1. 畫面中央顯示一個成語（如：一馬當先），空出最後一個字（如：一馬當＿）。\n2. 下方給出四個字的選項按鈕（如：先、先、仙、鮮）。\n3. 答對時按鈕變綠色、播放成功音效並加 10 分；答錯按鈕變紅色。\n4. 倒數計時 60 秒，時間到顯示結算分數。`,
+                result: `[已為您在「我的小遊戲」資料夾中建立 idioms.html！]\n特色亮點：\n- 簡約且高質感的深色卡片介面，配合溫暖的重點橙色按鈕。\n- 完整的成語資料庫（隨機出題，內置 20 組常用成語）。\n- 內建 JS 無音訊合成技術，答對答錯均有視覺微震動反饋。\n- 結束時顯示「成語小達人」或「成語實習生」等趣味稱號，激發學生挑戰欲。`
+            }
+        ];
+
+        function switchScene(index) {
+            // 更新按鈕狀態
+            const buttons = document.querySelectorAll('#scene-menu .scene-btn');
+            buttons.forEach((btn, idx) => {
+                if (idx === index) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // 更新內容
+            const data = scenesData[index];
+            document.getElementById('active-scene-title').textContent = data.title;
+            document.getElementById('active-scene-tag').textContent = data.tag;
+            document.getElementById('active-prompt').textContent = data.prompt;
+            document.getElementById('active-result').textContent = data.result;
+        }
+
+        // 初始化載入第一筆
+        window.addEventListener('DOMContentLoaded', () => {
+            switchScene(0);
+            
+            // 監聽滾動事件，為導覽列增加陰影
+            window.addEventListener('scroll', () => {
+                const header = document.querySelector('header');
+                if (window.scrollY > 50) {
+                    header.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+                    header.style.padding = '0.7rem 2rem';
+                } else {
+                    header.style.boxShadow = 'none';
+                    header.style.padding = '1rem 2rem';
+                }
+            });
+
+            // 導覽點擊平滑滾動與 active 切換
+            const navLinks = document.querySelectorAll('.nav-menu a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

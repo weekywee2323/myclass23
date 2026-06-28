@@ -491,6 +491,89 @@
             from { opacity: 0; transform: scale(0.96); }
             to { opacity: 1; transform: scale(1); }
         }
+
+        /* 8. 劇情過場畫面 */
+        .cutscene-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #07040e;
+            z-index: 140;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .cutscene-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cutscene-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.5s ease;
+        }
+
+        .narration-box {
+            position: absolute;
+            bottom: 30px;
+            left: 5%;
+            right: 5%;
+            background: rgba(243, 237, 217, 0.95);
+            border: 3px double var(--border-gold);
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            color: #1c150c;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .narration-title {
+            font-size: 0.85rem;
+            font-weight: 900;
+            color: #8c1d1d;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(140, 29, 29, 0.2);
+            padding-bottom: 4px;
+        }
+
+        .narration-text {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.5;
+            letter-spacing: 1.5px;
+            text-align: justify;
+        }
+
+        .cutscene-prompt {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            animation: promptBlink 1.5s infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes promptBlink {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
     </style>
 </head>
 <body>
@@ -581,6 +664,19 @@
             </div>
             <button class="play-again-btn" id="restartAdventureBtn">再次冒險</button>
         </div>
+
+        <!-- 8. 結局劇情過場畫面 -->
+        <div class="cutscene-overlay" id="cutsceneOverlay">
+            <div class="cutscene-container">
+                <img src="" class="cutscene-image" id="cutsceneImage" alt="劇情過場">
+                <!-- 旁白字幕區 -->
+                <div class="narration-box">
+                    <h3 class="narration-title" id="narrationTitle">《天地無垠，龍魂長存》</h3>
+                    <p class="narration-text" id="narrationText"></p>
+                </div>
+                <div class="cutscene-prompt" id="cutscenePrompt">── 點擊畫面任意處繼續 ──</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -605,6 +701,37 @@
         const clearOverlay = document.getElementById('clearOverlay');
         const totalTimeText = document.getElementById('totalTimeText');
         const restartAdventureBtn = document.getElementById('restartAdventureBtn');
+
+        // 結局過場變數
+        const cutsceneOverlay = document.getElementById('cutsceneOverlay');
+        const cutsceneImage = document.getElementById('cutsceneImage');
+        const narrationText = document.getElementById('narrationText');
+        const narrationTitle = document.getElementById('narrationTitle');
+        const cutscenePrompt = document.getElementById('cutscenePrompt');
+        let cutsceneIndex = 0;
+
+        const CUTSCENE_SLIDES = [
+            {
+                image: "大冒險地圖/1.png",
+                title: "《天地無垠，龍魂長存》 ── 第一卷：【封印初啟】",
+                text: "當三枚古印沒入沉重的石扉，禁錮千年的時空之輪，終於再度轉動。"
+            },
+            {
+                image: "大冒險地圖/2.png",
+                title: "《天地無垠，龍魂長存》 ── 第二卷：【龍魂歸天】",
+                text: "牠未曾離去，只是化作了這山河的呼吸，與萬物同寂，與歲月同長。"
+            },
+            {
+                image: "大冒險地圖/3.png",
+                title: "《天地無垠，龍魂長存》 ── 第三卷：【英雄遠眺】",
+                text: "風停了。英雄解下配劍，而故事，已刻在每一寸甦醒的泥土裡。"
+            },
+            {
+                image: "大冒險地圖/4.png",
+                title: "《天地無垠，龍魂長存》 ── 終章：【傳奇終章】",
+                text: "行者終有歸處，但這幅畫卷，將永不褪色。"
+            }
+        ];
 
         // 音效控制 (Web Audio API)
         let audioCtx;
@@ -868,19 +995,57 @@
 
         // 完成大冒險
         function completeAdventure() {
-            playSound('complete');
-            
-            // 計算歷時時間
-            const start = parseInt(localStorage.getItem('adventure_start') || Date.now().toString());
-            const elapsed = Date.now() - start;
-            
-            const minutes = Math.floor(elapsed / 60000);
-            const seconds = Math.floor((elapsed % 60000) / 1000);
-            
-            totalTimeText.textContent = `${minutes} 分 ${seconds} 秒`;
-            
-            clearOverlay.style.display = 'flex';
+            gateModal.classList.remove('active');
+            cutsceneIndex = 0;
+            showCutsceneSlide();
+            cutsceneOverlay.style.display = 'flex';
         }
+
+        function showCutsceneSlide() {
+            playSound('click');
+            const slide = CUTSCENE_SLIDES[cutsceneIndex];
+            
+            // 漸淡出
+            cutsceneImage.style.opacity = '0';
+            document.querySelector('.narration-box').style.opacity = '0';
+            
+            setTimeout(() => {
+                cutsceneImage.src = slide.image;
+                narrationTitle.textContent = slide.title;
+                narrationText.textContent = slide.text;
+                
+                // 漸淡入
+                cutsceneImage.style.opacity = '1';
+                document.querySelector('.narration-box').style.opacity = '1';
+            }, 300);
+
+            if (cutsceneIndex === CUTSCENE_SLIDES.length - 1) {
+                cutscenePrompt.textContent = "── [點擊畫面結束] ──";
+            } else {
+                cutscenePrompt.textContent = "── 點擊畫面任意處繼續 ──";
+            }
+        }
+
+        // 劇情過場點擊前進
+        cutsceneOverlay.addEventListener('click', () => {
+            cutsceneIndex++;
+            if (cutsceneIndex < CUTSCENE_SLIDES.length) {
+                showCutsceneSlide();
+            } else {
+                playSound('complete');
+                cutsceneOverlay.style.display = 'none';
+                
+                // 計算歷時時間並顯示大關卡結算面板
+                const start = parseInt(localStorage.getItem('adventure_start') || Date.now().toString());
+                const elapsed = Date.now() - start;
+                
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                totalTimeText.textContent = `${minutes} 分 ${seconds} 秒`;
+                clearOverlay.style.display = 'flex';
+            }
+        });
 
         // 點擊熱區事件
         zoneDynasty.addEventListener('click', () => {
